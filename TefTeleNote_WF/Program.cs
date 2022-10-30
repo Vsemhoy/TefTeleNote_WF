@@ -1,0 +1,26 @@
+using TefTeleNote_WF.Data;
+using TefTeleNote_WF.Transfer;
+
+namespace TefTeleNote_WF
+{
+    internal static class Program
+    {
+        /// <summary>
+        ///  The main entry point for the application.
+        /// </summary>
+        [STAThread]
+
+        
+
+        static void Main()
+        {
+            // To customize application configuration such as set high DPI settings or default font,
+            // see https://aka.ms/applicationconfiguration.
+            ApplicationConfiguration.Initialize();
+            Language.GetLanguageList();
+            UserConfig.ReadConfig();
+            BooksFilesUtils.LoadBooks();
+            Application.Run(new BookShelfForm());
+        }
+    }
+}
