@@ -14,6 +14,7 @@ namespace TefTeleNote_WF.Data
         public const string iconname = "icon";
         public const string templatename = "template.html";
         public const string manifestname =  "info.xml";
+        public const string structurename =  "struct.xml";
         public const string fileFolderName = ".files";
         public const string defaultFileName = "blank.html";
 
@@ -40,6 +41,8 @@ namespace TefTeleNote_WF.Data
         public string meta_descr { get; set; }
         public string meta_title { get; set; }
         public int language { get; set; }
+
+        public List<ItemStructure> structureList { get; set; }
 
 
 

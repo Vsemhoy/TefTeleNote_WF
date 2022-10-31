@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Diga.WebView2.WinForms" Version="20.0.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1370.28" />
   </ItemGroup>
 

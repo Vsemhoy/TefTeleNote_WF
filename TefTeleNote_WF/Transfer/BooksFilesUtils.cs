@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using TefTeleNote_WF.Data;
+using static System.Net.Mime.MediaTypeNames;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace TefTeleNote_WF.Transfer
@@ -50,7 +51,7 @@ namespace TefTeleNote_WF.Transfer
 
                 foreach (System.IO.DirectoryInfo dirInfo in subDirs)
                 {
-                    for (int i = 0; i < 2; i++)
+                    if (dirInfo.Name[0] != '.')
                     {
 
                     Library.fileCollection.Add(LoadBookFromDirectory(dirInfo));
@@ -215,6 +216,75 @@ namespace TefTeleNote_WF.Transfer
             return null;
             
         }
+
+
+        public static List<ItemStructure> LoadBookStructure(DirectoryInfo dirInfo)
+        {
+            List<ItemStructure> itemStruct = new List<ItemStructure>();
+            try
+            {
+                System.IO.FileInfo[] files = null;
+                DirectoryInfo assetFolder = new DirectoryInfo(Path.Combine(dirInfo.FullName, BooksFilesUtils.assetFolder));
+                string path = Path.Combine(assetFolder.FullName, BookFile.structurename);
+            
+                string text = File.ReadAllText(path);
+                if (text != null)
+                {
+                    XmlDocument xmlDocument = new XmlDocument();
+                    xmlDocument.LoadXml(text);
+                    XmlNodeList xmlNodes;
+                    try
+                    {
+                        xmlNodes = xmlDocument.GetElementsByTagName("item");
+                        foreach (XmlNode xmlNode in xmlNodes)
+                        {
+                            ItemStructure its = new ItemStructure();
+                            if (xmlNode.SelectSingleNode("id") != null)
+                            {
+                                its.id = xmlNode.SelectSingleNode("id").InnerText;
+                            }
+                            if (xmlNode.SelectSingleNode("name") != null)
+                            {
+                                its.name = xmlNode.SelectSingleNode("name").InnerText;
+                            }
+                            if (xmlNode.SelectSingleNode("path") != null)
+                            {
+                                its.path = xmlNode.SelectSingleNode("path").InnerText;
+                            }
+                            if (xmlNode.SelectSingleNode("type") != null)
+                            {
+                                its.type = Convert.ToInt32(xmlNode.SelectSingleNode("type").InnerText);
+                            }
+                            if (xmlNode.SelectSingleNode("order") != null)
+                            {
+                                its.order = Convert.ToInt32(xmlNode.SelectSingleNode("order").InnerText);
+                            }
+                            if (xmlNode.SelectSingleNode("level") != null)
+                            {
+                                its.level = Convert.ToInt32(xmlNode.SelectSingleNode("level").InnerText);
+                            }
+                            if (xmlNode.SelectSingleNode("tabIndex") != null)
+                            {
+                                its.tabIndex = Convert.ToInt32(xmlNode.SelectSingleNode("tabIndex").InnerText);
+                            }
+                            itemStruct.Add(its);
+                        }
+                    }
+                    catch (Exception excep1)
+                    {
+                        MessageBox.Show(excep1.Message);
+                    }
+                    
+                }
+
+            }
+            catch (Exception excep1)
+            {
+                MessageBox.Show(excep1.Message);
+            }
+            return itemStruct;
+        }
+
 
         static void WalkDirectoryTree(System.IO.DirectoryInfo root)
         {

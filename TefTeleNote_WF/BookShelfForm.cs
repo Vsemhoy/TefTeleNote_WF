@@ -126,7 +126,7 @@ namespace TefTeleNote_WF
                 Label name  = new Label();
                 name.Text = item.titleName;
                 name.AutoSize = false;
-                name.Font = new Font("Serif", 15);
+                name.Font = new Font("Serif", 12);
                 name.Width = this.itemWidth - picOffset - this.cardPadding * 10;
                 name.Location = new Point(picOffset + this.cardPadding * 5, this.cardPadding * 2);
                 name.Height = this.itemHeight / 5;
@@ -138,7 +138,7 @@ namespace TefTeleNote_WF
                 Label descr = new Label();
                 descr.Text = item.description;
                 descr.AutoSize = false;
-                descr.Font = new Font("Serif", 12);
+                //descr.Font = new Font("Serif", 12);
                 descr.Width = this.itemWidth - picOffset - this.cardPadding * 10;
                 descr.Location = new Point(picOffset + this.cardPadding * 5, this.cardPadding * 2 + this.itemHeight / 4);
                 descr.Height = this.itemHeight - this.itemHeight / 4;
@@ -158,7 +158,7 @@ namespace TefTeleNote_WF
 
                 BookFile bf = BooksFilesUtils.GetBookById(id);
 
-                var view = new BookViewForm();
+                var view = new BookViewForm(bf);
                 view.Text = bf.titleName;
                 view.Visible = true;
                 view.WindowState = FormWindowState.Normal;

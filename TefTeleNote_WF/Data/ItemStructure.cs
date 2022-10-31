@@ -13,6 +13,7 @@ namespace TefTeleNote_WF.Data
 
         public string id { get; set; }
         public string name { get; set; }
+        public string path { get; set; }
         public int type { get; set; }
         public int order { get; set; }
         public int level { get; set; }
@@ -25,6 +26,7 @@ namespace TefTeleNote_WF.Data
             this.order = 1;
             this.level = 1;
             this.tabIndex = 1;
+            this.path = String.Empty;
         }
     }
 
