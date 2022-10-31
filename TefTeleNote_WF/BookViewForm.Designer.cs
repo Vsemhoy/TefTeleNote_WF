@@ -41,6 +41,8 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.tool_savePage = new System.Windows.Forms.ToolStripMenuItem();
+            this.tool_saveBook = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tabControl_browser.SuspendLayout();
             this.SuspendLayout();
@@ -50,7 +52,9 @@
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripComboBox1,
-            this.fileToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.tool_savePage,
+            this.tool_saveBook});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(798, 27);
@@ -132,7 +136,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 24);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(790, 327);
+            this.tabPage2.Size = new System.Drawing.Size(790, 575);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -142,7 +146,7 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 24);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(790, 327);
+            this.tabPage3.Size = new System.Drawing.Size(790, 575);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "tabPage3";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -152,10 +156,23 @@
             this.tabPage4.Location = new System.Drawing.Point(4, 24);
             this.tabPage4.Name = "tabPage4";
             this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(790, 327);
+            this.tabPage4.Size = new System.Drawing.Size(790, 575);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "tabPage4";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // tool_savePage
+            // 
+            this.tool_savePage.Name = "tool_savePage";
+            this.tool_savePage.Size = new System.Drawing.Size(72, 23);
+            this.tool_savePage.Text = "Save Page";
+            this.tool_savePage.Click += new System.EventHandler(this.tool_savePage_Click);
+            // 
+            // tool_saveBook
+            // 
+            this.tool_saveBook.Name = "tool_saveBook";
+            this.tool_saveBook.Size = new System.Drawing.Size(73, 23);
+            this.tool_saveBook.Text = "Save Book";
             // 
             // BookViewForm
             // 
@@ -189,5 +206,7 @@
         public TabControl tabControl_browser;
         private TabPage tabPage3;
         private TabPage tabPage4;
+        private ToolStripMenuItem tool_savePage;
+        private ToolStripMenuItem tool_saveBook;
     }
 }

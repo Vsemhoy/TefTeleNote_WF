@@ -43,7 +43,7 @@ namespace TefTeleNote_WF.Templates
                 "<title>" + REPLACE_metatitle + "</title>\r\n    <meta name='viewport' content='width=device-width, initial-scale=1'>\r\n    " +
                 "<meta name='description' content='" + REPLACE_metadesc + "'>\r\n    <meta name='keywords' content='" + REPLACE_metakeys + "'>\r\n    " +
                 "<meta name='author' content='" + REPLACE_metaauthor + "'>\r\n\r\n    <style>\r\n      " + REPLACE_stylecss + "\r\n    </style>\r\n  </head>\r\n  " +
-                "<body>\r\n    <section id='bookerContent' " + REPLACE_contenteditable + ">\r\n      " + REPLACE_content + "\r\n    </section>\r\n  " + REPLACE_script + "</body>\r\n</html>";
+                "<body><section id='bookerContent' " + REPLACE_contenteditable + ">" + REPLACE_content + "</section>" + REPLACE_script + "</body></html>";
 
             return result;
         }
@@ -71,7 +71,7 @@ namespace TefTeleNote_WF.Templates
 
             tpl = tpl.Replace(REPLACE_metadesc, bf.meta_descr);
             tpl = tpl.Replace(REPLACE_script, scripts);
-            tpl = tpl.Replace(REPLACE_content, context);
+            tpl = tpl.Replace(REPLACE_content, context.Trim());
             tpl = tpl.Replace(REPLACE_metaauthor, bf.author);
             tpl = tpl.Replace(REPLACE_metakeys, bf.meta_keys);
             tpl = tpl.Replace(REPLACE_metatitle, bf.meta_title);

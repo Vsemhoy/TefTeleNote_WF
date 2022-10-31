@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows.Forms;
 using System.Xml;
 using TefTeleNote_WF.Data;
@@ -26,6 +27,7 @@ namespace TefTeleNote_WF
         public List<ItemStructure> itemStructure;
         public string activeItemId = string.Empty;
         private int tabViewPadding = 6;
+        private BookFile thisBook;
 
         public BookViewForm(BookFile bf)
         {
@@ -34,7 +36,7 @@ namespace TefTeleNote_WF
             tabControl_browser.MouseDown += tabControl_browser_MouseDown;
             tabControl_browser.MouseUp += tabControl_browser_MouseUp;
             //this.tabControl_browser.ItemSize = new Size(200, 40);
-
+            thisBook = bf;
             var root = bf.directory;
             itemStructure = BooksFilesUtils.LoadBookStructure(new DirectoryInfo(root));
 
@@ -172,6 +174,74 @@ namespace TefTeleNote_WF
             //string Text = await webVisor.ExecuteScriptAsync("document.getElementsByTagName('body')[0].innerHTML;");
             //MessageBox.Show(Text);
             //await webVisor2.ExecuteScriptAsync("document.getElementsByTagName('body')[0].setAttribute('contenteditable', true);");
+        }
+
+        private async void tool_savePage_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(activeItemId))
+            {
+                WebView2 wew = null;
+                foreach (TabPage tp in tabControl_browser.TabPages)
+                {
+                    if (tp.Name == activeItemId)
+                    {
+                        foreach (var control in tp.Controls)
+                        {
+                            WebView2 v = control as WebView2;
+                            if (v != null)
+                            {
+                                wew = v;
+                                break;
+                            }
+                        }
+                    }
+
+                }
+                if (wew != null)
+                {
+                    string result = await wew.ExecuteScriptAsync("document.getElementById('bookerContent').innerHTML;");
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        result = Regex.Unescape(result);
+                        result = result.TrimStart('"');
+                        result = result.TrimEnd('"');
+
+                        foreach (var page in itemStructure)
+                        {
+                            if (page.id == activeItemId)
+                            {
+                                string path = Path.Combine(thisBook.directory, page.path, page.name + ".html");
+                                File.WriteAllText(path, result);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+
+            }
+        }
+
+        public string EntityToUnicode(string html)
+        {
+            var replacements = new Dictionary<string, string>();
+            var regex = new Regex("(&[a-z]{2,5};)");
+            foreach (Match match in regex.Matches(html))
+            {
+                if (!replacements.ContainsKey(match.Value))
+                {
+                    var unicode = HttpUtility.HtmlDecode(match.Value);
+                    if (unicode.Length == 1)
+                    {
+                        replacements.Add(match.Value, string.Concat("&#", Convert.ToInt32(unicode[0]), ";"));
+                    }
+                }
+            }
+            foreach (var replacement in replacements)
+            {
+                html = html.Replace(replacement.Key, replacement.Value);
+            }
+            return html;
         }
     }
 }
