@@ -14,6 +14,7 @@ using System.Web;
 using System.Windows.Forms;
 using System.Xml;
 using TefTeleNote_WF.Data;
+using TefTeleNote_WF.Generators;
 using TefTeleNote_WF.Templates;
 using TefTeleNote_WF.Transfer;
 using static System.Net.Mime.MediaTypeNames;
@@ -28,6 +29,8 @@ namespace TefTeleNote_WF
         public string activeItemId = string.Empty;
         private int tabViewPadding = 6;
         private BookFile thisBook;
+
+        private TreeNode _selectedNode;
 
         public BookViewForm(BookFile bf)
         {
@@ -55,7 +58,7 @@ namespace TefTeleNote_WF
                     WebView2 wv = new WebView2();
                     //CoreWebView2 cww2 = new CoreWebView2("http://jfkasdj.kk");
                     //wv.CoreWebView2.
-                    wv.Height = tabControl_browser.Height;
+                    wv.Height = tabControl_browser.Height - 28;
                     wv.Width = tabControl_browser.Width - this.tabViewPadding;
 
                     string filePath = Path.Combine(root, item.path, item.name + ".html");
@@ -121,7 +124,51 @@ namespace TefTeleNote_WF
 
 
             }
+            this.treeview_docStr.ItemDrag += Treeview_docStr_ItemDrag;
+            this.treeview_docStr.DragDrop += Treeview_docStr_DragDrop;
+            this.treeview_docStr.DragEnter += Treeview_docStr_DragEnter;
+            this.Load += BookViewForm_Load;
+        }
 
+        private void Treeview_docStr_DragEnter(object? sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        private void Treeview_docStr_DragDrop(object? sender, DragEventArgs e)
+        {
+            TreeNode sourceNode = _selectedNode;
+            if (sourceNode != null)
+            {
+                if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
+                {
+                    Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
+                    TreeNode destinationNode = ((TreeView)sender).GetNodeAt(pt);
+                    if (destinationNode != null)
+                    {
+                        //ur target
+                        MessageBox.Show(pt.Y.ToString(), pt.X.ToString());
+                    }
+                }
+            }
+        }
+
+        private void Treeview_docStr_ItemDrag(object? sender, ItemDragEventArgs e)
+        {
+            DoDragDrop(e.Item, DragDropEffects.Move);
+            _selectedNode = (TreeNode)e.Item;
+        }
+
+        private async void BookViewForm_Load(object? sender, EventArgs e)
+        {
+            for (int i = 0; i < 65; i++)
+            {
+                await FillGeneratedCollection(i);
+                //if (i % 10 == 0)
+                //{
+                //    UpdateTree(collection);
+                //}
+            }
         }
 
         private void tabControl_browser_MouseUp(object? sender, MouseEventArgs e)
@@ -242,6 +289,90 @@ namespace TefTeleNote_WF
                 html = html.Replace(replacement.Key, replacement.Value);
             }
             return html;
+        }
+
+        private void btn_openNavigationPanel_Click(object sender, EventArgs e)
+        {
+            if (panel_bookNavigation.Visible)
+            {
+                this.panel_bookNavigation.Visible = false;
+            }
+            else
+            {
+                this.panel_bookNavigation.Visible = true;
+            }
+        }
+
+
+        private async Task FillGeneratedCollection(int i)
+        {
+            int lastLevel = 1;
+            string iden = ID.Generate();
+            while (Library.idCollection.Contains(iden))
+            {
+                iden = ID.Generate();
+            }
+            var random = new Random();
+            //if (lastLevel == 1)
+            //{
+            lastLevel = random.Next(1, 2);
+            //} 
+            //else if (lastLevel == 2)
+            //{
+            //    lastLevel = random.Next(1, 3);
+            //} 
+            //else if (lastLevel == 3)
+            //{
+            //    lastLevel = random.Next(2, 4);
+            //} 
+            //else if (lastLevel == 4)
+            //{
+            //    lastLevel = random.Next(3, 4);
+            //}
+
+            Contents drow = new Contents(iden, DataType.Sheet, Format.Text, i);
+            drow.Author = RandomText.generateRandomString(10);
+            drow.Description = RandomText.generateRandomString(50);
+            drow.Name = i.ToString() + " " + RandomText.generateRandomString(6);
+            drow.Data = drow.Name + "\r\n" + RandomText.generateRandomString(random.Next(100, 11200));
+            drow.Parent = ID.Root;
+            drow.Edits = 0;
+            drow.Views = 1;
+            drow.Level = lastLevel;
+            drow.Order = i;
+            drow.DateC = DateTime.Now.ToFileTime();
+            drow.DateM = DateTime.Now.ToFileTime();
+            Library.collection.Add(drow);
+            Library.idCollection.Add(iden);
+            UpdateTree(Library.collection);
+            await Task.Delay(10);
+
+        }
+
+        public void UpdateTree(List<Contents> collection)
+        {
+            if (collection.Count > 0)
+            {
+                //TreeNodeCollection tnk = treeview_docStr.Nodes;
+                //tnk.Clear();
+                treeview_docStr.BeginUpdate();
+                int lastlevel = 0;
+                int lastCounter = 0;
+
+                Contents item = Library.collection[Library.idCollection.Count - 1];
+                TreeNode tren = new TreeNode(item.Name);
+                tren.Tag = item.Id;
+                treeview_docStr.Nodes.Add(tren);
+
+                //foreach (var item in collection)
+                //{
+                //    TreeNode tren = new TreeNode(item.Name);
+                //    tren.Tag = item.Id;
+                //    treeview_docStr.Nodes.Add(tren);
+
+                //}
+                treeview_docStr.EndUpdate();
+            }
         }
     }
 }

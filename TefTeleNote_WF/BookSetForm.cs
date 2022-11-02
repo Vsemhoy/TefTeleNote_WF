@@ -230,13 +230,11 @@ namespace TefTeleNote_WF
                 bf.manifestPath = manifestFile;
                 File.WriteAllText(manifestFile, BooksFilesUtils.BuildBookManifest(bf));
 
+                var structFile = Path.Combine(assdir, BookFile.structurename);
+                File.WriteAllText(structFile, BooksFilesUtils.BuildBookStructure(bf));
 
+                this.Close();
 
-
-
-                //File.WriteAllText(configPath, string.Empty);
-                //File.WriteAllText(configPath, result);
-                //return true;
             }
             catch (Exception eex)
             {

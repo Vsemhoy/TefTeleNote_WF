@@ -421,6 +421,45 @@ namespace TefTeleNote_WF.Transfer
             return output.ToString();
         }
 
+        public static string BuildBookStructure(BookFile bf)
+        {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.OmitXmlDeclaration = true;
+            StringBuilder output = new StringBuilder();
+            XmlWriter xmlWriter = XmlWriter.Create(output, settings);
+            xmlWriter.WriteStartElement("root");
+
+            xmlWriter.WriteStartElement("item");
+            xmlWriter.WriteStartElement("id");
+            xmlWriter.WriteString(Generators.ID.Generate(32));
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("name");
+            xmlWriter.WriteString("blank");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("type");
+            xmlWriter.WriteString("1");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("order");
+            xmlWriter.WriteString("1");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("level");
+            xmlWriter.WriteString("1");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("tabIndex");
+            xmlWriter.WriteString("0");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("path");
+            xmlWriter.WriteString("");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteEndElement();
+
+            xmlWriter.WriteEndElement();
+            xmlWriter.Close();
+
+            return output.ToString();
+        }
+
         public static BookFile GetBookById(string id)
         {
             foreach (var book in Library.fileCollection)

@@ -126,7 +126,7 @@ namespace TefTeleNote_WF
                 Label name  = new Label();
                 name.Text = item.titleName;
                 name.AutoSize = false;
-                name.Font = new Font("Serif", 12);
+                //name.Font = new Font("Serif", 12);
                 name.Width = this.itemWidth - picOffset - this.cardPadding * 10;
                 name.Location = new Point(picOffset + this.cardPadding * 5, this.cardPadding * 2);
                 name.Height = this.itemHeight / 5;
@@ -171,6 +171,8 @@ namespace TefTeleNote_WF
             //ReloadBookListInRows();
             Form setform = new BookSetForm();
             setform.ShowDialog();
+            BooksFilesUtils.LoadBooks();
+            this.ReloadBookListInRows();
         }
     }
 }
