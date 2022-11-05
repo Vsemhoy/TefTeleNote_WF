@@ -231,7 +231,7 @@ namespace TefTeleNote_WF
                 File.WriteAllText(manifestFile, BooksFilesUtils.BuildBookManifest(bf));
 
                 var structFile = Path.Combine(assdir, BookFile.structurename);
-                File.WriteAllText(structFile, BooksFilesUtils.BuildBookStructure(bf));
+                File.WriteAllText(structFile, BooksFilesUtils.BuildEmptyBookStructure(bf));
 
                 this.Close();
 

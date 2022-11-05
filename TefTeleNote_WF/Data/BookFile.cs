@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace TefTeleNote_WF.Data
@@ -26,11 +27,13 @@ namespace TefTeleNote_WF.Data
         public string manifestPath { get; set; }
         public DateTime created { get; set; }
         public DateTime updated { get; set; }
+        public string updator { get; set; }
         public DateTime lastopen { get; set; }
         public int pageCount { get; set; }
         public int folderCount { get; set; }
         public string iconPath { get; set; }
         public string coverPath { get; set; }
+        public string structPath { get; set; }
         public string superCoverPath { get; set; }
         public string templatPath { get; set; }
         public string stylePath { get; set; }
@@ -41,6 +44,7 @@ namespace TefTeleNote_WF.Data
         public string meta_descr { get; set; }
         public string meta_title { get; set; }
         public int language { get; set; }
+        public string itemIdOfActiveTab { get; set; }
 
         public List<ItemStructure> structureList { get; set; }
 
@@ -60,6 +64,7 @@ namespace TefTeleNote_WF.Data
             this.directory = string.Empty;
             this.iconPath = string.Empty;
             this.manifestPath = string.Empty;
+            this.structPath = string.Empty;
             this.titleName = Generators.RandomText.generateRandomString(5);
             this.stylePath = string.Empty;
             this.superCoverPath = string.Empty;
@@ -71,6 +76,17 @@ namespace TefTeleNote_WF.Data
             this.meta_keys = string.Empty;
             this.meta_title = string.Empty;
             this.language = 45;
+        }
+
+
+        public static bool IsValidFilename(string testName)
+        {
+            Regex containsABadCharacter = new Regex("[" + Regex.Escape(System.IO.Path.InvalidPathChars.ToString()) + "]");
+            if (containsABadCharacter.IsMatch(testName)) { return false; };
+
+            // other checks for UNC, drive-path format, etc
+
+            return true;
         }
     }
 }

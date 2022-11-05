@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -23,19 +24,41 @@ namespace TefTeleNote_WF
 {
     public partial class BookViewForm : Form
     {
+        /// <summary>
+        /// Current opened book file (defined in MainForm)
+        /// </summary>
+        private BookFile openedBook;
         private TabPage selectedTab = new TabPage();
         private int mouseX;
+        /// <summary>
+        /// File structure of the book (name, order, folders, id's etc)
+        /// </summary>
         public List<ItemStructure> itemStructure;
+        /// <summary>
+        /// List of the pages opened AS TABS
+        /// </summary>
         public List<Page> openedPageList;
+        /// <summary>
+        /// ID of the active TAB (tag = id of the page)
+        /// </summary>
         public string activeItemId = string.Empty;
+        public string activeItemName = string.Empty;
+        public string activeDirectory = string.Empty;
+        public int activeLevel = 0;
+
+
         private int tabViewPadding = 6;
         private int tabViewTopOffset = 28;
-        private BookFile thisBook;
 
+        /// <summary>
+        /// Root of the book's directory
+        /// </summary>
         public string root;
 
         public int tabHeight;
         public int tabWidth;
+
+        public bool editItemMode = false;
 
 
         private TreeNode _selectedNode;
@@ -44,15 +67,25 @@ namespace TefTeleNote_WF
         {
             InitializeComponent();
             this.openedPageList = new List<Page>();
+            this.panel_bookNavigation.Visible = false;
+
+            this.menuStrip_main.BackColor = Color.LightGray;
+            this.BackColor = Color.LightGray;
+
 
             this.tabHeight = this.tabControl_browser.Height;
             this.tabWidth = this.tabControl_browser.Width;
+
+            this.panel_bookNavigation.Top = this.menuStrip_main.Height;
+            this.panel_bookNavigation.Height = this.ClientSize.Height - this.menuStrip_main.Height;
+            this.panel_bookNavBottomManage.Top = this.panel_bookNavigation.Height - this.panel_bookNavBottomManage.Height;
+            this.panel_bookNavigation.Left = 0;
 
             tabControl_browser.MouseDown += tabControl_browser_MouseDown;
             tabControl_browser.MouseUp += tabControl_browser_MouseUp;
             tabControl_browser.MouseDoubleClick += TabControl_browser_MouseDoubleClick;
             //this.tabControl_browser.ItemSize = new Size(200, 40);
-            thisBook = bf;
+            openedBook = bf;
             this.root = bf.directory;
             this.itemStructure = BooksFilesUtils.LoadBookStructure(new DirectoryInfo(root));
 
@@ -134,11 +167,7 @@ namespace TefTeleNote_WF
                     {
                         MessageBox.Show("Document " + item.name + ".html. not found!", "Document not found error!");
                     }
-
-
                 }
-
-
             }
             this.treeview_docStr.ItemDrag += Treeview_docStr_ItemDrag;
             this.treeview_docStr.DragDrop += Treeview_docStr_DragDrop;
@@ -156,9 +185,37 @@ namespace TefTeleNote_WF
             this.btn_removeItem.MouseEnter += Btn_removeItem_MouseEnter;
             this.btn_removeItem.MouseLeave += Btn_removeItem_MouseLeave;
 
+            this.btn_openNavigationPanel.MouseHover += Btn_openNavigationPanel_MouseHover;
+
+            this.panel_bookNavigation.MouseLeave += Panel_bookNavigation_MouseLeave;
+
             this.Resize += BookViewForm_Resize;
         }
 
+        private void Btn_openNavigationPanel_MouseHover(object? sender, EventArgs e)
+        {
+            if (!this.panel_bookNavigation.Visible)
+            {
+                this.panel_bookNavigation.Visible = true;
+            }
+            else
+            {
+                this.panel_bookNavigation.Visible = false;
+
+            }
+        }
+
+        private void Panel_bookNavigation_MouseLeave(object? sender, EventArgs e)
+        {
+            if (Cursor.Position.X > this.panel_bookNavigation.Width + this.Left + 10)
+            {
+                this.panel_bookNavigation.Visible = false;
+            }
+        }
+
+
+
+        #region decorators
         private void Btn_removeItem_MouseLeave(object? sender, EventArgs e)
         {
             PictureBox pictureBox = (PictureBox)sender;
@@ -241,6 +298,7 @@ namespace TefTeleNote_WF
         {
             pictureBox.BackColor = Color.White;
         }
+        #endregion decorators
 
         private void TabControl_browser_MouseDoubleClick(object? sender, MouseEventArgs e)
         {
@@ -300,10 +358,16 @@ namespace TefTeleNote_WF
 
         private void BookViewForm_Resize(object? sender, EventArgs e)
         {
-            this.tabControl_browser.Height = this.Height - this.tabControl_browser.Top;
-            this.tabControl_browser.Width = this.Width - this.tabControl_browser.Left;
+            this.tabControl_browser.Height = this.ClientSize.Height - this.tabControl_browser.Top;
+            this.tabControl_browser.Width = this.ClientSize.Width - this.tabControl_browser.Left;
+            this.panel_bookNavigation.BackColor = Color.RebeccaPurple;
+            this.panel_bookNavigation.Height = this.ClientSize.Height - this.menuStrip_main.Height - 1;
+            this.panel_bookNavBottomManage.Top = this.panel_bookNavigation.Height - this.panel_bookNavBottomManage.Height - 2;
 
-            this.panel_bookNavigation.Height = this.Height - this.panel_bookNavigation.Top;
+            this.treeview_docStr.Width = this.panel_bookNavigation.Width;
+            this.treeview_docStr.Left = 0;
+            this.treeview_docStr.Height = this.panel_bookNavigation.Height - this.panel_bookNavBottomManage.Height - this.treeview_docStr.Top - this.tabViewPadding * 2;
+
 
             foreach (TabPage tabPage in this.tabControl_browser.Controls)
             {
@@ -394,7 +458,7 @@ namespace TefTeleNote_WF
                             }
                         }
                         // Renew template of the page based on Template and Styel
-                        string resultHtml = HtmlTemplates.HtmlBuildHtmlPage(this.thisBook, item, context, "", true);
+                        string resultHtml = HtmlTemplates.HtmlBuildHtmlPage(this.openedBook, item, context, "", true);
                         File.WriteAllText(filePath, resultHtml);
                         //wv.CoreWebView2.NavigateToString(content);
                         Uri uri = new Uri(filePath);
@@ -403,6 +467,8 @@ namespace TefTeleNote_WF
                         tp.Controls.Add(wv);
                         tabControl_browser.Controls.Add(tp);
                         this.tabControl_browser.SelectedIndex = openedPageList.Count - 1;
+                        this.activeItemId = item.id;
+                        this.panel_bookNavigation.Visible = false;
                     }
                     else
                     {
@@ -563,7 +629,7 @@ namespace TefTeleNote_WF
                         {
                             if (page.id == activeItemId)
                             {
-                                string path = Path.Combine(thisBook.directory, page.path, page.name + ".html");
+                                string path = Path.Combine(openedBook.directory, page.path, page.name + ".html");
                                 File.WriteAllText(path, result);
                                 break;
                             }
@@ -679,6 +745,185 @@ namespace TefTeleNote_WF
                 //}
                 treeview_docStr.EndUpdate();
             }
+        }
+
+        /// <summary>
+        /// Rremove Item (Select item in the tree -> click -> Prompt -> ok -> remove());
+        /// Discard: write something -> click -> empty input
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_removeItem_Click(object sender, EventArgs e)
+        {
+            this.editItemMode = false;
+        }
+
+        /// <summary>
+        /// Onclick rewrite item name (and file name)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_applyItem_Click(object sender, EventArgs e)
+        {
+           
+        }
+
+        /// <summary>
+        /// Creates new folder in the tree
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_addFolder_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
+            {
+                if (BookFile.IsValidFilename(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
+                {
+                    string fullPath = Path.Combine(this.root, this.activeDirectory, this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.'));
+                    bool ou = Directory.Exists(fullPath);
+                    if (ou)
+                    {
+                        MessageBox.Show("Folder is already exists!", "Warning!");
+                        return;
+                    }
+                    var fs = Directory.CreateDirectory(fullPath);
+                    
+                        UserConfig.OpenFileSequrity(fullPath);
+                        if (fs != null)
+                        {
+                            ItemStructure its = new ItemStructure();
+                            its.order = this.itemStructure.Count;
+                            its.path = this.activeDirectory;
+                            its.level = this.activeLevel;
+                            its.type = 2;
+                            its.name = this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.');
+                            its.id = ID.Generate(32);
+                            its.tabIndex = -1;
+                            this.itemStructure.Add(its);
+
+                            this.openedBook.folderCount++;
+                            this.SaveBookManifest();
+                            this.SaveBookStruture();
+
+                            this.AddItemInTreeView(its);
+                        
+                    };
+                }
+                else
+                {
+                    MessageBox.Show("Folder name is invalid!", "Warning!");
+                }
+            }
+            else
+            {
+                this.textBox_itemEditName.BackColor = Color.LightPink;
+                MessageBox.Show("Input should not be empty!", "Warning!");
+                this.textBox_itemEditName.BackColor = Color.White;
+            }
+        }
+
+        /// <summary>
+        /// Creates new page in the tree
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_addPage_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
+            {
+                if (BookFile.IsValidFilename(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
+                {
+                    string fullPath = Path.Combine(this.root, this.activeDirectory, this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.') + ".html");
+                    bool ou = File.Exists(fullPath);
+                    if (ou)
+                    {
+                        MessageBox.Show("File is already exists!", "Warning!");
+                        return;
+                    }
+                    using (var fs = File.Create(fullPath))
+                    {
+                        UserConfig.OpenFileSequrity(fullPath);
+                        if (fs != null)
+                        {
+                            ItemStructure its = new ItemStructure();
+                            its.order = this.itemStructure.Count;
+                            its.path = this.activeDirectory;
+                            its.level = this.activeLevel;
+                            its.type = 1;
+                            its.name = this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.');
+                            its.id = ID.Generate(32);
+                            its.tabIndex = -1;
+                            this.itemStructure.Add(its);
+
+                            this.openedBook.pageCount++;
+                            this.SaveBookManifest();
+                            this.SaveBookStruture();
+
+                            this.AddItemInTreeView(its);
+                        }
+                    };
+                }
+                else
+                {
+                    MessageBox.Show("File name is invalid!", "Warning!");
+                }
+            }
+            else
+            {
+                this.textBox_itemEditName.BackColor = Color.LightPink;
+                MessageBox.Show("Input should not be empty!", "Warning!");
+                this.textBox_itemEditName.BackColor = Color.White;
+            }
+        }
+
+
+        private void SaveBookManifest()
+        {
+            this.openedBook.itemIdOfActiveTab = this.activeItemId;
+            this.openedBook.updated = DateTime.Now;
+            this.openedBook.updator = UserConfig.userName;
+            string manifest = BooksFilesUtils.BuildBookManifest(this.openedBook);
+            File.WriteAllText(this.openedBook.manifestPath, manifest);
+        }
+
+        private void SaveBookStruture()
+        {
+            string structure = BooksFilesUtils.BuildBookStructure(this.itemStructure);
+            File.WriteAllText(this.openedBook.structPath, structure);
+        }
+
+        private void AddItemInTreeView(ItemStructure item)
+        {
+            treeview_docStr.BeginUpdate();
+
+                int lastlevel = 0;
+                int lastCounter = 0;
+
+            //Contents item = Library.collection[Library.idCollection.Count - 1];
+            TreeNode tren = new TreeNode("New");
+            if (item.type == 1)
+            {
+                string marger = string.Empty;
+                for (int i = 0; i < item.level; i++)
+                {
+                    marger += "- ";
+                }
+                tren = new TreeNode(marger + item.name);
+
+            }
+            else
+            {
+                string marger = string.Empty;
+                for (int i = 0; i < item.level; i++)
+                {
+                    marger += "/ ";
+                }
+                tren = new TreeNode("/ " + marger + item.name);
+            }
+                tren.Tag = item.id;
+                treeview_docStr.Nodes.Add(tren);
+
+            treeview_docStr.EndUpdate();
         }
     }
 }

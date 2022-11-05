@@ -116,6 +116,9 @@ namespace TefTeleNote_WF.Transfer
                         case BookFile.stylename:
                             bf.stylePath = fi.FullName;
                             break;
+                        case BookFile.structurename:
+                            bf.structPath = fi.FullName;
+                            break;
                     }
                 }
                 if (!string.IsNullOrEmpty(bf.manifestPath))
@@ -165,6 +168,10 @@ namespace TefTeleNote_WF.Transfer
                             {
                                 bf.updated = Convert.ToDateTime(xmlNode.SelectSingleNode("updated").InnerText);
                             }
+                            if (xmlNode.SelectSingleNode("updator") != null)
+                            {
+                                bf.updator = xmlNode.SelectSingleNode("updator").InnerText;
+                            }
                             if (xmlNode.SelectSingleNode("lastopen") != null)
                             {
                                 bf.lastopen = Convert.ToDateTime(xmlNode.SelectSingleNode("lastopen").InnerText);
@@ -199,7 +206,21 @@ namespace TefTeleNote_WF.Transfer
                             MessageBox.Show(excep2.Message);
                         }
 
-
+                        try
+                        {
+                            if (xmlDocument.GetElementsByTagName("state").Count > 0)
+                            {
+                                xmlNode = xmlDocument.GetElementsByTagName("state").Item(0);
+                                if (xmlNode.SelectSingleNode("itemIdOfActiveTab") != null)
+                                {
+                                    bf.itemIdOfActiveTab = xmlNode.SelectSingleNode("itemIdOfActiveTab").InnerText;
+                                }
+                            }
+                        }
+                        catch (Exception excep2)
+                        {
+                            MessageBox.Show(excep2.Message);
+                        }
                     }
                     catch (Exception exp)
                     {
@@ -351,6 +372,9 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteStartElement("langCode");
             xmlWriter.WriteString(Convert.ToString(bf.language));
             xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("category");
+            xmlWriter.WriteString(Convert.ToString(bf.categoryName));
+            xmlWriter.WriteEndElement();
             xmlWriter.WriteEndElement();
 
             xmlWriter.WriteStartElement("info");
@@ -369,6 +393,9 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteStartElement("updated");
             xmlWriter.WriteString(bf.updated.ToString());
             xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("updator");
+            xmlWriter.WriteString(bf.updator);
+            xmlWriter.WriteEndElement();
             xmlWriter.WriteStartElement("lastopen");
             xmlWriter.WriteString(bf.lastopen.ToString());
             xmlWriter.WriteEndElement();
@@ -383,28 +410,28 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteEndElement();
             xmlWriter.WriteEndElement();
 
-            xmlWriter.WriteStartElement("structure");
-            xmlWriter.WriteStartElement("item");
-            xmlWriter.WriteStartElement("id");
-            xmlWriter.WriteString(Generators.ID.Generate(32));
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("type");
-            xmlWriter.WriteString("1");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("name");
-            xmlWriter.WriteString("blank");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("order");
-            xmlWriter.WriteString("1");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("level");
-            xmlWriter.WriteString("1");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("tabIndex");
-            xmlWriter.WriteString("1");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteEndElement();
+            //xmlWriter.WriteStartElement("structure");
+            //xmlWriter.WriteStartElement("item");
+            //xmlWriter.WriteStartElement("id");
+            //xmlWriter.WriteString(Generators.ID.Generate(32));
+            //xmlWriter.WriteEndElement();
+            //xmlWriter.WriteStartElement("type");
+            //xmlWriter.WriteString("1");
+            //xmlWriter.WriteEndElement();
+            //xmlWriter.WriteStartElement("name");
+            //xmlWriter.WriteString("blank");
+            //xmlWriter.WriteEndElement();
+            //xmlWriter.WriteStartElement("order");
+            //xmlWriter.WriteString("1");
+            //xmlWriter.WriteEndElement();
+            //xmlWriter.WriteStartElement("level");
+            //xmlWriter.WriteString("1");
+            //xmlWriter.WriteEndElement();
+            //xmlWriter.WriteStartElement("tabIndex");
+            //xmlWriter.WriteString("1");
+            //xmlWriter.WriteEndElement();
+            //xmlWriter.WriteEndElement();
+            //xmlWriter.WriteEndElement();
 
             xmlWriter.WriteStartElement("statistics");
             xmlWriter.WriteStartElement("pages");
@@ -415,13 +442,19 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteEndElement();
             xmlWriter.WriteEndElement();
 
+            xmlWriter.WriteStartElement("state");
+            xmlWriter.WriteStartElement("itemIdOfActiveTab");
+            xmlWriter.WriteString(bf.itemIdOfActiveTab);
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteEndElement();
+
             xmlWriter.WriteEndElement();
             xmlWriter.Close();
 
             return output.ToString();
         }
 
-        public static string BuildBookStructure(BookFile bf)
+        public static string BuildEmptyBookStructure(BookFile bf)
         {
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
@@ -470,6 +503,49 @@ namespace TefTeleNote_WF.Transfer
                 }
             }
             return null;
+        }
+
+
+        public static string BuildBookStructure(List<ItemStructure> itsList)
+        {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.OmitXmlDeclaration = true;
+            StringBuilder output = new StringBuilder();
+            XmlWriter xmlWriter = XmlWriter.Create(output, settings);
+            xmlWriter.WriteStartElement("root");
+
+            foreach (var item in itsList)
+            {
+                xmlWriter.WriteStartElement("item");
+                xmlWriter.WriteStartElement("id");
+                xmlWriter.WriteString(item.id);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("name");
+                xmlWriter.WriteString(item.name);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("type");
+                xmlWriter.WriteString(item.type.ToString());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("order");
+                xmlWriter.WriteString(item.order.ToString());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("level");
+                xmlWriter.WriteString(item.level.ToString());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("tabIndex");
+                xmlWriter.WriteString(item.tabIndex.ToString());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("path");
+                xmlWriter.WriteString(item.path);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteEndElement();
+            }
+
+            xmlWriter.WriteEndElement();
+            xmlWriter.Close();
+
+            return output.ToString();
         }
     }
 }
