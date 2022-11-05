@@ -146,13 +146,16 @@ namespace TefTeleNote_WF
                             }
                         }
                         // Renew template of the page based on Template and Styel
-                        string resultHtml = HtmlTemplates.HtmlBuildHtmlPage(bf, item, context, "", true);
+                        HtmlTemplates htm = new HtmlTemplates(UserConfig.languageCode);
+                        string resultHtml = HtmlTemplates.HtmlBuildHtmlPage(bf, item, context, htm.GetScriptSection(), true);
                         File.WriteAllText(filePath, resultHtml);
                         //wv.CoreWebView2.NavigateToString(content);
                         Uri uri = new Uri(filePath);
                         // wv.CoreWebView2.Navigate("file:///" + Path.Combine(root, item.path, item.name + ".html"));
                         wv.Source = (uri);
                         tp.Controls.Add(wv);
+                        wv.WebMessageReceived += Wv_WebMessageReceived;
+                       // wv.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
                         tabControl_browser.Controls.Add(tp);
                         if (activeTabs == 0)
                         {
@@ -190,7 +193,26 @@ namespace TefTeleNote_WF
             this.panel_bookNavigation.MouseLeave += Panel_bookNavigation_MouseLeave;
 
             this.Resize += BookViewForm_Resize;
+
+            this.tool_savePage.Click += Tool_savePage_Click;
+            this.tool_saveBook.Click += Tool_saveBook_Click;
         }
+
+        /// <summary>
+        /// Get messages from View (open tabs, go to browser and so on...)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        private async void Wv_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs args)
+        {
+            String content = args.TryGetWebMessageAsString();
+            // <button onclick="window.chrome.webview.postMessage('getData');">BUtton</button> // -- TEMPLATE REQUEST
+            if (content != null)
+            {
+                MessageBox.Show(content.ToString());
+            }
+        }
+
 
         private void Btn_openNavigationPanel_MouseHover(object? sender, EventArgs e)
         {
@@ -359,7 +381,7 @@ namespace TefTeleNote_WF
         private void BookViewForm_Resize(object? sender, EventArgs e)
         {
             this.tabControl_browser.Height = this.ClientSize.Height - this.tabControl_browser.Top;
-            this.tabControl_browser.Width = this.ClientSize.Width - this.tabControl_browser.Left;
+            this.tabControl_browser.Width = this.ClientSize.Width - this.tabControl_browser.Left + 2;
             this.panel_bookNavigation.BackColor = Color.RebeccaPurple;
             this.panel_bookNavigation.Height = this.ClientSize.Height - this.menuStrip_main.Height - 1;
             this.panel_bookNavBottomManage.Top = this.panel_bookNavigation.Height - this.panel_bookNavBottomManage.Height - 2;
@@ -379,8 +401,8 @@ namespace TefTeleNote_WF
                 {
                     if (c.GetType() == typeof(WebView2))
                     {
-                        c.Width = this.tabControl_browser.Width - this.tabViewPadding  * 3 ;
-                        c.Height = this.tabControl_browser.Height - this.tabViewTopOffset - this.tabViewPadding * 3;
+                        c.Width = this.tabControl_browser.Width - this.tabViewPadding;
+                        c.Height = this.tabControl_browser.Height - this.tabViewTopOffset;
                     }
                 }
                 }
@@ -393,87 +415,103 @@ namespace TefTeleNote_WF
             if (tnode != null)
             {
                 var id = tnode.Tag;
-                if (!this.openedPageList.Contains(id))
+                if (e.Button == MouseButtons.Left)
                 {
-                    ItemStructure item = null;
-                    foreach (var page in this.itemStructure)
+                    if (!this.openedPageList.Contains(id))
                     {
-                        if (page.id == id)
+                        ItemStructure item = null;
+                        foreach (var page in this.itemStructure)
                         {
-                            item = page;
-                            foreach (Page opens in this.openedPageList)
+                            if (page.id == id)
                             {
-                                if (opens.id == item.id)
+                                // Is it folder?
+                                if (page.type == 2)
                                 {
-                                    this.tabControl_browser.SelectedIndex = opens.order;
                                     return;
+                                }
+                                item = page;
+                                foreach (Page opens in this.openedPageList)
+                                {
+                                    if (opens.id == item.id)
+                                    {
+                                        this.tabControl_browser.SelectedIndex = opens.order;
+                                        return;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    this.openedPageList.Add(new Page(item.id, item.name, openedPageList.Count));
-                    TabPage tp = new TabPage();
-                    tp.Name = item.id;
-                    tp.Tag = item.id;
-                    tp.Text = item.name;
+                        this.openedPageList.Add(new Page(item.id, item.name, openedPageList.Count));
+                        TabPage tp = new TabPage();
+                        tp.Name = item.id;
+                        tp.Tag = item.id;
+                        tp.Text = item.name;
 
-                    WebView2 wv = new WebView2();
-                    //CoreWebView2 cww2 = new CoreWebView2("http://jfkasdj.kk");
-                    //wv.CoreWebView2.
-                    wv.Height = tabControl_browser.Height - 28;
-                    wv.Width = tabControl_browser.Width - this.tabViewPadding;
+                        WebView2 wv = new WebView2();
+                        //CoreWebView2 cww2 = new CoreWebView2("http://jfkasdj.kk");
+                        //wv.CoreWebView2.
+                        wv.Height = tabControl_browser.Height - 28;
+                        wv.Width = tabControl_browser.Width - this.tabViewPadding;
 
-                    string filePath = Path.Combine(this.root, item.path, item.name + ".html");
-                    string content = File.ReadAllText(filePath);
-                    string context = content;
+                        string filePath = Path.Combine(this.root, item.path, item.name + ".html");
+                        string content = File.ReadAllText(filePath);
+                        string context = content;
 
-                    if (content != null)
-                    {
-                        // Content should be written withid <section id='bookerContent'... tag
-                        // Check if file opened (by header "<!DOCTYPE html>")
-                        if (content.Contains("<!DOCTYPE html>"))
+                        if (content != null)
                         {
-
-                            // okay, it is opened file
-                            // check if there are no body tags
-                            if (content.Contains("<body") && content.Contains("</body>"))
+                            // Content should be written withid <section id='bookerContent'... tag
+                            // Check if file opened (by header "<!DOCTYPE html>")
+                            if (content.Contains("<!DOCTYPE html>"))
                             {
-                                HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-                                doc.Load(filePath);
-                                doc.OptionFixNestedTags = true;
-                                HtmlNode node = doc.DocumentNode.SelectSingleNode("//section");
-                                if (node != null)
+
+                                // okay, it is opened file
+                                // check if there are no body tags
+                                if (content.Contains("<body") && content.Contains("</body>"))
                                 {
-                                    context = node.InnerHtml;
+                                    HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
+                                    doc.Load(filePath);
+                                    doc.OptionFixNestedTags = true;
+                                    HtmlNode node = doc.DocumentNode.SelectSingleNode("//section");
+                                    if (node != null)
+                                    {
+                                        context = node.InnerHtml;
+                                    }
+                                    else
+                                    {
+                                        MessageBox.Show("There are some problems with document " + item.name + ".html. Try to remove all document data except content placed <section> and </section> tags (section tags should be removed).", "Document structure error!");
+                                    }
                                 }
                                 else
                                 {
                                     MessageBox.Show("There are some problems with document " + item.name + ".html. Try to remove all document data except content placed <section> and </section> tags (section tags should be removed).", "Document structure error!");
                                 }
                             }
-                            else
-                            {
-                                MessageBox.Show("There are some problems with document " + item.name + ".html. Try to remove all document data except content placed <section> and </section> tags (section tags should be removed).", "Document structure error!");
-                            }
+                            // Renew template of the page based on Template and Styel
+                            HtmlTemplates htm = new HtmlTemplates(UserConfig.languageCode);
+                            string resultHtml = HtmlTemplates.HtmlBuildHtmlPage(this.openedBook, item, context, htm.GetScriptSection(), true);
+                            File.WriteAllText(filePath, resultHtml);
+                            //wv.CoreWebView2.NavigateToString(content);
+                            Uri uri = new Uri(filePath);
+                            // wv.CoreWebView2.Navigate("file:///" + Path.Combine(root, item.path, item.name + ".html"));
+                            wv.Source = (uri);
+                            tp.Controls.Add(wv);
+                            wv.WebMessageReceived += Wv_WebMessageReceived;
+                            tabControl_browser.Controls.Add(tp);
+                            this.tabControl_browser.SelectedIndex = openedPageList.Count - 1;
+                            this.activeItemId = item.id;
+                            this.panel_bookNavigation.Visible = false;
                         }
-                        // Renew template of the page based on Template and Styel
-                        string resultHtml = HtmlTemplates.HtmlBuildHtmlPage(this.openedBook, item, context, "", true);
-                        File.WriteAllText(filePath, resultHtml);
-                        //wv.CoreWebView2.NavigateToString(content);
-                        Uri uri = new Uri(filePath);
-                        // wv.CoreWebView2.Navigate("file:///" + Path.Combine(root, item.path, item.name + ".html"));
-                        wv.Source = (uri);
-                        tp.Controls.Add(wv);
-                        tabControl_browser.Controls.Add(tp);
-                        this.tabControl_browser.SelectedIndex = openedPageList.Count - 1;
-                        this.activeItemId = item.id;
-                        this.panel_bookNavigation.Visible = false;
+                        else
+                        {
+                            MessageBox.Show("Document " + item.name + ".html. not found!", "Document not found error!");
+                        }
+
                     }
-                    else
-                    {
-                        MessageBox.Show("Document " + item.name + ".html. not found!", "Document not found error!");
-                    }
+                } 
+                else
+                {
+                    // Open CONTEXT MENU
+
                 }
 
             }
@@ -595,7 +633,7 @@ namespace TefTeleNote_WF
             //await webVisor2.ExecuteScriptAsync("document.getElementsByTagName('body')[0].setAttribute('contenteditable', true);");
         }
 
-        private async void tool_savePage_Click(object sender, EventArgs e)
+        private async void Tool_savePage_Click(object? sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(activeItemId))
             {
@@ -636,10 +674,16 @@ namespace TefTeleNote_WF
                         }
                     }
                 }
-
-
             }
         }
+
+
+        private async void Tool_saveBook_Click(object? sender, EventArgs e)
+        {
+            this.SaveBookManifest();
+        }
+
+  
 
         public string EntityToUnicode(string html)
         {
@@ -925,5 +969,117 @@ namespace TefTeleNote_WF
 
             treeview_docStr.EndUpdate();
         }
+
+
+
+
+
+
+
+        private async void btn_tool_header_Click(object sender, EventArgs e)
+        {
+            WebView2 wew = this.GetActiveWevView();
+            if (wew != null)
+            {
+                await wew.ExecuteScriptAsync("document.execCommand('formatBlock', false, '<h3>');");
+            }
+        }
+
+
+        private async void btn_tool_hr_Click(object sender, EventArgs e)
+        {
+            WebView2 wew = this.GetActiveWevView();
+            if (wew != null)
+            {
+                await wew.ExecuteScriptAsync("document.execCommand('insertHorizontalRule',false,'');");
+            }
+        }
+
+
+        private async  void btn_tool_ol_Click(object sender, EventArgs e)
+        {
+            WebView2 wew = this.GetActiveWevView();
+            if (wew != null)
+            {
+                await wew.ExecuteScriptAsync("document.execCommand('insertOrderedList', false, '');");
+            }
+        }
+
+        private async void btn_tool_ul_Click(object sender, EventArgs e)
+        {
+            WebView2 wew = this.GetActiveWevView();
+            if (wew != null)
+            {
+                await wew.ExecuteScriptAsync("document.execCommand('insertUnorderedList', false, '');");
+            }
+        }
+
+        private async void btn_tool_code_Click(object sender, EventArgs e)
+        {
+            WebView2 wew = this.GetActiveWevView();
+            if (wew != null)
+            {
+                await wew.ExecuteScriptAsync("document.execCommand('formatBlock', false, '<pre>');");
+            }
+        }
+
+        private async  void btn_tool_insertAnchor_Click(object sender, EventArgs e)
+        {
+            WebView2 wew = this.GetActiveWevView();
+            if (wew != null)
+            {
+                await wew.ExecuteScriptAsync("document.execCommand('insertHTML', false, '<a class=\"goto\" href=\"blank.html\"  goto=\"blank.html\">Blank Named anchor</a>');");
+            }
+        }
+
+        private async void btn_tool_clearFormat_Click(object sender, EventArgs e)
+        {
+            WebView2 wew = this.GetActiveWevView();
+            if (wew != null)
+            {
+                //await wew.ExecuteScriptAsync("document.execCommand('formatBlock', false, 'div'); ");
+                await wew.ExecuteScriptAsync("function clearFormat(e){\r\n\r\nconst selection = window.getSelection();\r\nif (!selection.isCollapsed) {\r\n  if (selection.anchorNode.parentNode.tagName === 'FONT'\r\n  || selection.anchorNode.parentNode.tagName === 'SPAN'\r\n  || selection.anchorNode.parentNode.tagName === 'B'\r\n  || selection.anchorNode.parentNode.tagName === 'U'\r\n  || selection.anchorNode.parentNode.tagName === 'U'\r\n  || selection.anchorNode.parentNode.tagName === 'I'\r\n  || selection.anchorNode.parentNode.tagName === 'HREF'\r\n  || selection.anchorNode.parentNode.tagName === 'STRIKE'\r\n  || selection.anchorNode.parentNode.tagName === 'CODE'\r\n  || selection.anchorNode.parentNode.tagName === 'H3'\r\n  || selection.anchorNode.parentNode.tagName === 'H1'\r\n\r\n  ){\r\n    selection.anchorNode.parentNode.replaceWith(selection.anchorNode);\r\n\r\n    e.preventDefault();\r\n  }\r\n}\r\n}");
+                await wew.ExecuteScriptAsync("clearFormat();");
+                await wew.ExecuteScriptAsync("document.execCommand('formatBlock', false, 'div'); ");
+            }
+        }
+
+        private async void btn_tool_highlight_Click(object sender, EventArgs e)
+        {
+            WebView2 wew = this.GetActiveWevView();
+            if (wew != null)
+            {
+                await wew.ExecuteScriptAsync("document.execCommand('hiliteColor', false, 'lightgreen');");
+            }
+        }
+
+        /// <summary>
+        /// Get active Webview to Apply modifiers
+        /// </summary>
+        /// <returns></returns>
+        public WebView2 GetActiveWevView()
+        {
+            if (!string.IsNullOrEmpty(activeItemId))
+            {
+                WebView2 wew = null;
+                foreach (TabPage tp in tabControl_browser.TabPages)
+                {
+                    if (tp.Name == activeItemId)
+                    {
+                        foreach (var control in tp.Controls)
+                        {
+                            WebView2 v = control as WebView2;
+                            if (v != null)
+                            {
+                                return v;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+
     }
 }

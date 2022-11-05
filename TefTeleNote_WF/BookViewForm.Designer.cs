@@ -30,7 +30,14 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BookViewForm));
             this.menuStrip_main = new System.Windows.Forms.MenuStrip();
-            this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
+            this.btn_tool_header = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_tool_ul = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_tool_ol = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_tool_hr = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_tool_code = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_tool_clearFormat = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_tool_highlight = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_tool_insertAnchor = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl_browser = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -78,17 +85,75 @@
             this.menuStrip_main.BackColor = System.Drawing.SystemColors.ControlLight;
             this.menuStrip_main.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip_main.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripComboBox1});
+            this.btn_tool_header,
+            this.btn_tool_ul,
+            this.btn_tool_ol,
+            this.btn_tool_hr,
+            this.btn_tool_code,
+            this.btn_tool_clearFormat,
+            this.btn_tool_highlight,
+            this.btn_tool_insertAnchor});
             this.menuStrip_main.Location = new System.Drawing.Point(0, 32);
             this.menuStrip_main.Name = "menuStrip_main";
             this.menuStrip_main.Size = new System.Drawing.Size(798, 30);
             this.menuStrip_main.TabIndex = 4;
             this.menuStrip_main.Text = "menuStrip1";
             // 
-            // toolStripComboBox1
+            // btn_tool_header
             // 
-            this.toolStripComboBox1.Name = "toolStripComboBox1";
-            this.toolStripComboBox1.Size = new System.Drawing.Size(121, 26);
+            this.btn_tool_header.Name = "btn_tool_header";
+            this.btn_tool_header.Size = new System.Drawing.Size(57, 26);
+            this.btn_tool_header.Text = "Header";
+            this.btn_tool_header.Click += new System.EventHandler(this.btn_tool_header_Click);
+            // 
+            // btn_tool_ul
+            // 
+            this.btn_tool_ul.Name = "btn_tool_ul";
+            this.btn_tool_ul.Size = new System.Drawing.Size(29, 26);
+            this.btn_tool_ul.Text = "ul";
+            this.btn_tool_ul.Click += new System.EventHandler(this.btn_tool_ul_Click);
+            // 
+            // btn_tool_ol
+            // 
+            this.btn_tool_ol.Name = "btn_tool_ol";
+            this.btn_tool_ol.Size = new System.Drawing.Size(25, 26);
+            this.btn_tool_ol.Text = "li";
+            this.btn_tool_ol.Click += new System.EventHandler(this.btn_tool_ol_Click);
+            // 
+            // btn_tool_hr
+            // 
+            this.btn_tool_hr.Name = "btn_tool_hr";
+            this.btn_tool_hr.Size = new System.Drawing.Size(35, 26);
+            this.btn_tool_hr.Text = "HR";
+            this.btn_tool_hr.Click += new System.EventHandler(this.btn_tool_hr_Click);
+            // 
+            // btn_tool_code
+            // 
+            this.btn_tool_code.Name = "btn_tool_code";
+            this.btn_tool_code.Size = new System.Drawing.Size(47, 26);
+            this.btn_tool_code.Text = "Code";
+            this.btn_tool_code.Click += new System.EventHandler(this.btn_tool_code_Click);
+            // 
+            // btn_tool_clearFormat
+            // 
+            this.btn_tool_clearFormat.Name = "btn_tool_clearFormat";
+            this.btn_tool_clearFormat.Size = new System.Drawing.Size(46, 26);
+            this.btn_tool_clearFormat.Text = "Clear";
+            this.btn_tool_clearFormat.Click += new System.EventHandler(this.btn_tool_clearFormat_Click);
+            // 
+            // btn_tool_highlight
+            // 
+            this.btn_tool_highlight.Name = "btn_tool_highlight";
+            this.btn_tool_highlight.Size = new System.Drawing.Size(69, 26);
+            this.btn_tool_highlight.Text = "Highlight";
+            this.btn_tool_highlight.Click += new System.EventHandler(this.btn_tool_highlight_Click);
+            // 
+            // btn_tool_insertAnchor
+            // 
+            this.btn_tool_insertAnchor.Name = "btn_tool_insertAnchor";
+            this.btn_tool_insertAnchor.Size = new System.Drawing.Size(25, 26);
+            this.btn_tool_insertAnchor.Text = "a";
+            this.btn_tool_insertAnchor.Click += new System.EventHandler(this.btn_tool_insertAnchor_Click);
             // 
             // tabControl_browser
             // 
@@ -151,9 +216,9 @@
             this.panel_bookNavigation.Controls.Add(this.panel_bookNavBottomManage);
             this.panel_bookNavigation.Controls.Add(this.treeview_docStr);
             this.panel_bookNavigation.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.panel_bookNavigation.Location = new System.Drawing.Point(400, 39);
+            this.panel_bookNavigation.Location = new System.Drawing.Point(554, 34);
             this.panel_bookNavigation.Name = "panel_bookNavigation";
-            this.panel_bookNavigation.Size = new System.Drawing.Size(395, 623);
+            this.panel_bookNavigation.Size = new System.Drawing.Size(395, 630);
             this.panel_bookNavigation.TabIndex = 0;
             // 
             // panel_bookNavigationTop
@@ -245,7 +310,7 @@
             this.panel_bookNavBottomManage.Controls.Add(this.textBox_itemEditName);
             this.panel_bookNavBottomManage.Controls.Add(this.btn_addPage);
             this.panel_bookNavBottomManage.Controls.Add(this.btn_removeItem);
-            this.panel_bookNavBottomManage.Location = new System.Drawing.Point(0, 595);
+            this.panel_bookNavBottomManage.Location = new System.Drawing.Point(0, 601);
             this.panel_bookNavBottomManage.Name = "panel_bookNavBottomManage";
             this.panel_bookNavBottomManage.Size = new System.Drawing.Size(395, 28);
             this.panel_bookNavBottomManage.TabIndex = 2;
@@ -264,7 +329,7 @@
             // 
             this.btn_applyItem.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.btn_applyItem.Image = ((System.Drawing.Image)(resources.GetObject("btn_applyItem.Image")));
-            this.btn_applyItem.Location = new System.Drawing.Point(26, -2);
+            this.btn_applyItem.Location = new System.Drawing.Point(26, -1);
             this.btn_applyItem.Name = "btn_applyItem";
             this.btn_applyItem.Size = new System.Drawing.Size(28, 28);
             this.btn_applyItem.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -276,7 +341,7 @@
             // 
             this.btn_addFolder.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.btn_addFolder.Image = ((System.Drawing.Image)(resources.GetObject("btn_addFolder.Image")));
-            this.btn_addFolder.Location = new System.Drawing.Point(339, -2);
+            this.btn_addFolder.Location = new System.Drawing.Point(339, -1);
             this.btn_addFolder.Name = "btn_addFolder";
             this.btn_addFolder.Size = new System.Drawing.Size(28, 28);
             this.btn_addFolder.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -407,7 +472,6 @@
         #endregion
 
         private MenuStrip menuStrip_main;
-        private ToolStripComboBox toolStripComboBox1;
         private TabPage tabPage1;
         private TabPage tabPage2;
         public TabControl tabControl_browser;
@@ -433,5 +497,13 @@
         private ToolStripMenuItem btn_openNavigationPanel;
         private ToolStripMenuItem tool_savePage;
         private ToolStripMenuItem tool_saveBook;
+        private ToolStripMenuItem btn_tool_header;
+        private ToolStripMenuItem btn_tool_ul;
+        private ToolStripMenuItem btn_tool_ol;
+        private ToolStripMenuItem btn_tool_hr;
+        private ToolStripMenuItem btn_tool_code;
+        private ToolStripMenuItem btn_tool_clearFormat;
+        private ToolStripMenuItem btn_tool_highlight;
+        private ToolStripMenuItem btn_tool_insertAnchor;
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using TefTeleNote_WF.Data;
@@ -36,6 +37,17 @@ namespace TefTeleNote_WF.Templates
             return result;
         }
 
+        public string GetScriptSection()
+        {
+            string result = "document.addEventListener('click',function(e){ console.log(0); " +
+                "if (e.target && e.target.classList.contains('goto')){ " +
+                " console.log(1); let string = e.target.getAttribute('goto');   " +
+                " if (string != ''){ console.log(string); " +
+                " window.chrome.webview.postMessage(string); };}; " +
+                " });";
+            return result;
+        }
+
         public string GetHtmlTemplate()
         {
             string result = string.Empty;
@@ -60,8 +72,12 @@ namespace TefTeleNote_WF.Templates
             {
                 style = stl;
             }
+            if (!string.IsNullOrEmpty(scripts))
+            {
+                scripts = "<script>" + scripts + "</script>";
+            }
             /// correct base style
-            style = "\r\n   body { font - family: system - ui, -apple - system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans - serif;}" +
+            style = "\r\n   body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;}" +
                 "\r\n   #bookerContent:focus { outline: none; padding-bottom: 50vh;}" + style;
         string contentedit = string.Empty;
             if (contenteditable)
