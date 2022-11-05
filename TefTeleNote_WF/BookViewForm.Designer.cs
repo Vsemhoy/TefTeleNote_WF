@@ -46,10 +46,24 @@
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.panel_bookNavigation = new System.Windows.Forms.Panel();
+            this.textBox_itemFilter = new System.Windows.Forms.TextBox();
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.btn_applyItem = new System.Windows.Forms.PictureBox();
+            this.btn_addFolder = new System.Windows.Forms.PictureBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.btn_addPage = new System.Windows.Forms.PictureBox();
+            this.btn_removeItem = new System.Windows.Forms.PictureBox();
             this.treeview_docStr = new System.Windows.Forms.TreeView();
             this.menuStrip1.SuspendLayout();
             this.tabControl_browser.SuspendLayout();
             this.panel_bookNavigation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.btn_applyItem)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.btn_addFolder)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.btn_addPage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.btn_removeItem)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -196,20 +210,108 @@
             // 
             // panel_bookNavigation
             // 
+            this.panel_bookNavigation.Controls.Add(this.textBox_itemFilter);
+            this.panel_bookNavigation.Controls.Add(this.pictureBox2);
+            this.panel_bookNavigation.Controls.Add(this.panel1);
             this.panel_bookNavigation.Controls.Add(this.treeview_docStr);
             this.panel_bookNavigation.Location = new System.Drawing.Point(0, 39);
             this.panel_bookNavigation.Name = "panel_bookNavigation";
             this.panel_bookNavigation.Size = new System.Drawing.Size(395, 623);
             this.panel_bookNavigation.TabIndex = 0;
             // 
+            // textBox_itemFilter
+            // 
+            this.textBox_itemFilter.Location = new System.Drawing.Point(21, 3);
+            this.textBox_itemFilter.Name = "textBox_itemFilter";
+            this.textBox_itemFilter.Size = new System.Drawing.Size(298, 23);
+            this.textBox_itemFilter.TabIndex = 0;
+            // 
+            // pictureBox2
+            // 
+            this.pictureBox2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
+            this.pictureBox2.Location = new System.Drawing.Point(342, 0);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(36, 33);
+            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox2.TabIndex = 1;
+            this.pictureBox2.TabStop = false;
+            // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.panel1.Controls.Add(this.btn_applyItem);
+            this.panel1.Controls.Add(this.btn_addFolder);
+            this.panel1.Controls.Add(this.textBox1);
+            this.panel1.Controls.Add(this.btn_addPage);
+            this.panel1.Controls.Add(this.btn_removeItem);
+            this.panel1.Location = new System.Drawing.Point(0, 590);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(395, 33);
+            this.panel1.TabIndex = 2;
+            // 
+            // btn_applyItem
+            // 
+            this.btn_applyItem.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.btn_applyItem.Image = ((System.Drawing.Image)(resources.GetObject("btn_applyItem.Image")));
+            this.btn_applyItem.Location = new System.Drawing.Point(289, 0);
+            this.btn_applyItem.Name = "btn_applyItem";
+            this.btn_applyItem.Size = new System.Drawing.Size(36, 33);
+            this.btn_applyItem.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.btn_applyItem.TabIndex = 5;
+            this.btn_applyItem.TabStop = false;
+            // 
+            // btn_addFolder
+            // 
+            this.btn_addFolder.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.btn_addFolder.Image = ((System.Drawing.Image)(resources.GetObject("btn_addFolder.Image")));
+            this.btn_addFolder.Location = new System.Drawing.Point(324, 0);
+            this.btn_addFolder.Name = "btn_addFolder";
+            this.btn_addFolder.Size = new System.Drawing.Size(36, 33);
+            this.btn_addFolder.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.btn_addFolder.TabIndex = 4;
+            this.btn_addFolder.TabStop = false;
+            // 
+            // textBox1
+            // 
+            this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textBox1.Location = new System.Drawing.Point(38, 10);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(177, 16);
+            this.textBox1.TabIndex = 3;
+            // 
+            // btn_addPage
+            // 
+            this.btn_addPage.BackColor = System.Drawing.SystemColors.HighlightText;
+            this.btn_addPage.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.btn_addPage.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btn_addPage.Image = ((System.Drawing.Image)(resources.GetObject("btn_addPage.Image")));
+            this.btn_addPage.Location = new System.Drawing.Point(359, 0);
+            this.btn_addPage.Name = "btn_addPage";
+            this.btn_addPage.Size = new System.Drawing.Size(36, 33);
+            this.btn_addPage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.btn_addPage.TabIndex = 2;
+            this.btn_addPage.TabStop = false;
+            // 
+            // btn_removeItem
+            // 
+            this.btn_removeItem.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.btn_removeItem.Image = ((System.Drawing.Image)(resources.GetObject("btn_removeItem.Image")));
+            this.btn_removeItem.Location = new System.Drawing.Point(0, 0);
+            this.btn_removeItem.Name = "btn_removeItem";
+            this.btn_removeItem.Size = new System.Drawing.Size(36, 33);
+            this.btn_removeItem.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.btn_removeItem.TabIndex = 0;
+            this.btn_removeItem.TabStop = false;
+            // 
             // treeview_docStr
             // 
             this.treeview_docStr.AllowDrop = true;
-            this.treeview_docStr.Location = new System.Drawing.Point(20, 21);
+            this.treeview_docStr.Location = new System.Drawing.Point(21, 45);
             this.treeview_docStr.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.treeview_docStr.Name = "treeview_docStr";
             this.treeview_docStr.ShowNodeToolTips = true;
-            this.treeview_docStr.Size = new System.Drawing.Size(357, 590);
+            this.treeview_docStr.Size = new System.Drawing.Size(357, 527);
             this.treeview_docStr.TabIndex = 1;
             // 
             // BookViewForm
@@ -226,6 +328,14 @@
             this.menuStrip1.PerformLayout();
             this.tabControl_browser.ResumeLayout(false);
             this.panel_bookNavigation.ResumeLayout(false);
+            this.panel_bookNavigation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.btn_applyItem)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.btn_addFolder)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.btn_addPage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.btn_removeItem)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -251,5 +361,13 @@
         private ToolStripMenuItem btn_openNavigationPanel;
         private Panel panel_bookNavigation;
         public TreeView treeview_docStr;
+        private TextBox textBox_itemFilter;
+        private PictureBox pictureBox2;
+        private Panel panel1;
+        private PictureBox btn_applyItem;
+        private PictureBox btn_addFolder;
+        private TextBox textBox1;
+        private PictureBox btn_addPage;
+        private PictureBox btn_removeItem;
     }
 }
