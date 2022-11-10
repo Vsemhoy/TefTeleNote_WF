@@ -28,6 +28,22 @@ namespace TefTeleNote_WF.Data
             this.tabIndex = 1;
             this.path = String.Empty;
         }
+
+        public static ItemStructure GetItemStructById(List<ItemStructure> its, string id)
+        {
+            if ( its != null)
+            {
+                foreach (ItemStructure istru in its)
+                {
+                    if (istru.id == id)
+                    {
+                        return istru;
+                    }
+                }
+            }
+            return null;
+        }
     }
+
 
 }

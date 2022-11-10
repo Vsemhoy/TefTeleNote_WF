@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BookViewForm));
             this.menuStrip_main = new System.Windows.Forms.MenuStrip();
             this.btn_tool_header = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,11 +59,12 @@
             this.textBox_itemEditName = new System.Windows.Forms.TextBox();
             this.btn_addPage = new System.Windows.Forms.PictureBox();
             this.btn_removeItem = new System.Windows.Forms.PictureBox();
-            this.treeview_docStr = new System.Windows.Forms.TreeView();
+            this.treeview_docStruct = new System.Windows.Forms.TreeView();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.btn_openNavigationPanel = new System.Windows.Forms.ToolStripMenuItem();
             this.tool_savePage = new System.Windows.Forms.ToolStripMenuItem();
             this.tool_saveBook = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip_treeNode = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuStrip_main.SuspendLayout();
             this.tabControl_browser.SuspendLayout();
             this.panel_bookNavigation.SuspendLayout();
@@ -97,7 +99,7 @@
             this.menuStrip_main.Name = "menuStrip_main";
             this.menuStrip_main.Size = new System.Drawing.Size(798, 30);
             this.menuStrip_main.TabIndex = 4;
-            this.menuStrip_main.Text = "menuStrip1";
+            this.menuStrip_main.Text = "menuStrip_toolBox";
             // 
             // btn_tool_header
             // 
@@ -214,7 +216,7 @@
             this.panel_bookNavigation.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel_bookNavigation.Controls.Add(this.panel_bookNavigationTop);
             this.panel_bookNavigation.Controls.Add(this.panel_bookNavBottomManage);
-            this.panel_bookNavigation.Controls.Add(this.treeview_docStr);
+            this.panel_bookNavigation.Controls.Add(this.treeview_docStruct);
             this.panel_bookNavigation.ForeColor = System.Drawing.SystemColors.ControlText;
             this.panel_bookNavigation.Location = new System.Drawing.Point(554, 34);
             this.panel_bookNavigation.Name = "panel_bookNavigation";
@@ -383,18 +385,18 @@
             this.btn_removeItem.TabStop = false;
             this.btn_removeItem.Click += new System.EventHandler(this.btn_removeItem_Click);
             // 
-            // treeview_docStr
+            // treeview_docStruct
             // 
-            this.treeview_docStr.AllowDrop = true;
-            this.treeview_docStr.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.treeview_docStr.CheckBoxes = true;
-            this.treeview_docStr.ItemHeight = 20;
-            this.treeview_docStr.Location = new System.Drawing.Point(1, 40);
-            this.treeview_docStr.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
-            this.treeview_docStr.Name = "treeview_docStr";
-            this.treeview_docStr.ShowNodeToolTips = true;
-            this.treeview_docStr.Size = new System.Drawing.Size(390, 544);
-            this.treeview_docStr.TabIndex = 1;
+            this.treeview_docStruct.AllowDrop = true;
+            this.treeview_docStruct.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.treeview_docStruct.CheckBoxes = true;
+            this.treeview_docStruct.ItemHeight = 20;
+            this.treeview_docStruct.Location = new System.Drawing.Point(1, 40);
+            this.treeview_docStruct.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
+            this.treeview_docStruct.Name = "treeview_docStruct";
+            this.treeview_docStruct.ShowNodeToolTips = true;
+            this.treeview_docStruct.Size = new System.Drawing.Size(390, 544);
+            this.treeview_docStruct.TabIndex = 1;
             // 
             // menuStrip1
             // 
@@ -434,6 +436,11 @@
             this.tool_saveBook.Name = "tool_saveBook";
             this.tool_saveBook.Size = new System.Drawing.Size(73, 28);
             this.tool_saveBook.Text = "Save Book";
+            // 
+            // contextMenuStrip_treeNode
+            // 
+            this.contextMenuStrip_treeNode.Name = "contextMenuStrip_treeNode";
+            this.contextMenuStrip_treeNode.Size = new System.Drawing.Size(181, 26);
             // 
             // BookViewForm
             // 
@@ -478,7 +485,7 @@
         private TabPage tabPage3;
         private TabPage tabPage4;
         private Panel panel_bookNavigation;
-        public TreeView treeview_docStr;
+        public TreeView treeview_docStruct;
         private Panel panel_bookNavBottomManage;
         private PictureBox btn_applyItem;
         private PictureBox btn_addFolder;
@@ -505,5 +512,6 @@
         private ToolStripMenuItem btn_tool_clearFormat;
         private ToolStripMenuItem btn_tool_highlight;
         private ToolStripMenuItem btn_tool_insertAnchor;
+        private ContextMenuStrip contextMenuStrip_treeNode;
     }
 }

@@ -19,6 +19,9 @@ namespace TefTeleNote_WF.Data
         public const string fileFolderName = ".files";
         public const string defaultFileName = "blank.html";
 
+        public const int ReadMode = 0;
+        public const int WriteMode = 1;
+
         public string id { get; set; }
         public string titleName { get; set; }
         public string description { get; set; }
@@ -38,6 +41,10 @@ namespace TefTeleNote_WF.Data
         public string templatPath { get; set; }
         public string stylePath { get; set; }
         public string template { get; set; }
+        /// <summary>
+        /// 0 - READ; 1 - EDIT
+        /// </summary>
+        public int openMode { get; set; } 
 
         public string categoryName { get; set; }
         public string meta_keys { get; set; }
@@ -47,6 +54,7 @@ namespace TefTeleNote_WF.Data
         public string itemIdOfActiveTab { get; set; }
 
         public List<ItemStructure> structureList { get; set; }
+        public List<Page> tabs { get; set; }
 
 
 
@@ -70,12 +78,16 @@ namespace TefTeleNote_WF.Data
             this.superCoverPath = string.Empty;
             this.templatPath = string.Empty;
             this.template = string.Empty;
+            this.openMode = WriteMode;
 
             this.categoryName = string.Empty;
             this.meta_descr = string.Empty;
             this.meta_keys = string.Empty;
             this.meta_title = string.Empty;
             this.language = 45;
+
+            this.structureList = new List<ItemStructure>();
+            this.tabs = new List<Page>();
         }
 
 

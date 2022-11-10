@@ -208,6 +208,29 @@ namespace TefTeleNote_WF.Transfer
 
                         try
                         {
+                            if (xmlDocument.GetElementsByTagName("tab").Count > 0)
+                            {
+                                XmlNodeList xmlNdl = xmlDocument.GetElementsByTagName("tab");
+                                if (xmlNdl != null)
+                                {
+                                    foreach (XmlNode tab in xmlNdl)
+                                    {
+                                        Page newTab = new Page();
+                                        newTab.id = tab.SelectSingleNode("id").InnerText;
+                                        newTab.name = tab.SelectSingleNode("name").InnerText;
+                                        newTab.order = Convert.ToInt32( tab.SelectSingleNode("order").InnerText);
+                                        bf.tabs.Add(newTab);
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception excep2)
+                        {
+                            MessageBox.Show(excep2.Message);
+                        }
+
+                        try
+                        {
                             if (xmlDocument.GetElementsByTagName("state").Count > 0)
                             {
                                 xmlNode = xmlDocument.GetElementsByTagName("state").Item(0);
@@ -410,28 +433,22 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteEndElement();
             xmlWriter.WriteEndElement();
 
-            //xmlWriter.WriteStartElement("structure");
-            //xmlWriter.WriteStartElement("item");
-            //xmlWriter.WriteStartElement("id");
-            //xmlWriter.WriteString(Generators.ID.Generate(32));
-            //xmlWriter.WriteEndElement();
-            //xmlWriter.WriteStartElement("type");
-            //xmlWriter.WriteString("1");
-            //xmlWriter.WriteEndElement();
-            //xmlWriter.WriteStartElement("name");
-            //xmlWriter.WriteString("blank");
-            //xmlWriter.WriteEndElement();
-            //xmlWriter.WriteStartElement("order");
-            //xmlWriter.WriteString("1");
-            //xmlWriter.WriteEndElement();
-            //xmlWriter.WriteStartElement("level");
-            //xmlWriter.WriteString("1");
-            //xmlWriter.WriteEndElement();
-            //xmlWriter.WriteStartElement("tabIndex");
-            //xmlWriter.WriteString("1");
-            //xmlWriter.WriteEndElement();
-            //xmlWriter.WriteEndElement();
-            //xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("openedTabs");
+            foreach (Page pg in bf.tabs)
+            {
+                xmlWriter.WriteStartElement("tab");
+                xmlWriter.WriteStartElement("id");
+                xmlWriter.WriteString(pg.id);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("name");
+                xmlWriter.WriteString(pg.name);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("order");
+                xmlWriter.WriteString(Convert.ToString(pg.order));
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteEndElement();
+            }
+            xmlWriter.WriteEndElement();
 
             xmlWriter.WriteStartElement("statistics");
             xmlWriter.WriteStartElement("pages");

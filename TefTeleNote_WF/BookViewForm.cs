@@ -8,6 +8,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Runtime;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -37,13 +38,15 @@ namespace TefTeleNote_WF
         /// <summary>
         /// List of the pages opened AS TABS
         /// </summary>
-        public List<Page> openedPageList;
+        public List<Page> tabList;
         /// <summary>
         /// ID of the active TAB (tag = id of the page)
         /// </summary>
         public string activeItemId = string.Empty;
         public string activeItemName = string.Empty;
         public string activeDirectory = string.Empty;
+        public string contextSelectedId = string.Empty;
+        public ItemStructure contextStruct = null;
         public int activeLevel = 0;
 
 
@@ -66,8 +69,9 @@ namespace TefTeleNote_WF
         public BookViewForm(BookFile bf)
         {
             InitializeComponent();
-            this.openedPageList = new List<Page>();
+            this.tabList = bf.tabs;
             this.panel_bookNavigation.Visible = false;
+            this.activeItemId = bf.itemIdOfActiveTab;
 
             this.menuStrip_main.BackColor = Color.LightGray;
             this.BackColor = Color.LightGray;
@@ -89,95 +93,15 @@ namespace TefTeleNote_WF
             this.root = bf.directory;
             this.itemStructure = BooksFilesUtils.LoadBookStructure(new DirectoryInfo(root));
 
-            this.tabControl_browser.TabPages.Clear();
-            int activeTabs = 0;
-
-            int order = 0;
-            foreach (var item in itemStructure)
-            {
-                if (item.tabIndex != -1)
-                {
-                    this.openedPageList.Add(new Page(item.id, item.name, order));
-                    TabPage tp = new TabPage();
-                    tp.Name = item.id;
-                    tp.Tag = item.id;
-                    tp.Text = item.name;
-                    tp.DoubleClick += Tp_DoubleClick;
-                    tp.Click += Tp_Click;
-                    order++;
-
-                    WebView2 wv = new WebView2();
-                    //CoreWebView2 cww2 = new CoreWebView2("http://jfkasdj.kk");
-                    //wv.CoreWebView2.
-                    wv.Height = tabControl_browser.Height - this.tabViewTopOffset;
-                    wv.Width = tabControl_browser.Width - this.tabViewPadding;
-
-                    string filePath = Path.Combine(root, item.path, item.name + ".html");
-                    string content = File.ReadAllText(filePath);
-                    string context = content;
-
-                    if (content != null)
-                    {
-                        // Content should be written withid <section id='bookerContent'... tag
-                        // Check if file opened (by header "<!DOCTYPE html>")
-                        if (content.Contains("<!DOCTYPE html>"))
-                        {
-
-                            // okay, it is opened file
-                            // check if there are no body tags
-                            if (content.Contains("<body") && content.Contains("</body>"))
-                            {
-                                HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-                                doc.Load(filePath);
-                                doc.OptionFixNestedTags = true;
-                                HtmlNode node = doc.DocumentNode.SelectSingleNode("//section");
-                                if (node != null)
-                                {
-                                    context = node.InnerHtml;
-                                }
-                                else
-                                {
-                                    MessageBox.Show("There are some problems with document " + item.name + ".html. Try to remove all document data except content placed <section> and </section> tags (section tags should be removed).", "Document structure error!");
-                                }
-                            }
-                            else
-                            {
-                                MessageBox.Show("There are some problems with document " + item.name + ".html. Try to remove all document data except content placed <section> and </section> tags (section tags should be removed).", "Document structure error!");
-                            }
-                        }
-                        // Renew template of the page based on Template and Styel
-                        HtmlTemplates htm = new HtmlTemplates(UserConfig.languageCode);
-                        string resultHtml = HtmlTemplates.HtmlBuildHtmlPage(bf, item, context, htm.GetScriptSection(), true);
-                        File.WriteAllText(filePath, resultHtml);
-                        //wv.CoreWebView2.NavigateToString(content);
-                        Uri uri = new Uri(filePath);
-                        // wv.CoreWebView2.Navigate("file:///" + Path.Combine(root, item.path, item.name + ".html"));
-                        wv.Source = (uri);
-                        tp.Controls.Add(wv);
-                        wv.WebMessageReceived += Wv_WebMessageReceived;
-                       // wv.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
-                        tabControl_browser.Controls.Add(tp);
-                        if (activeTabs == 0)
-                        {
-                            if (activeItemId == string.Empty)
-                            {
-                                activeItemId = item.id;
-                            }
-                        }
-                        activeTabs++;
-                    }
-                    else
-                    {
-                        MessageBox.Show("Document " + item.name + ".html. not found!", "Document not found error!");
-                    }
-                }
-            }
-            this.treeview_docStr.ItemDrag += Treeview_docStr_ItemDrag;
-            this.treeview_docStr.DragDrop += Treeview_docStr_DragDrop;
-            this.treeview_docStr.DragEnter += Treeview_docStr_DragEnter;
+            
+            this.treeview_docStruct.ItemDrag += Treeview_docStr_ItemDrag;
+            this.treeview_docStruct.DragDrop += Treeview_docStr_DragDrop;
+            this.treeview_docStruct.DragEnter += Treeview_docStr_DragEnter;
             
             this.Load += BookViewForm_Load;
-            this.treeview_docStr.NodeMouseClick += Treeview_docStr_NodeMouseClick;
+            this.treeview_docStruct.NodeMouseClick += Treeview_docStr_NodeMouseClick;
+
+            this.LoadTabsOnLoad(bf);
 
             this.btn_addPage.MouseEnter += Btn_addPage_MouseEnter;
             this.btn_addPage.MouseLeave += Btn_addPage_MouseLeave;
@@ -213,6 +137,91 @@ namespace TefTeleNote_WF
             }
         }
 
+        public void LoadTabsOnLoad(BookFile bf)
+        {
+            this.tabControl_browser.TabPages.Clear();
+
+            int order = 0;
+            foreach (Page tab in bf.tabs)
+            {
+                foreach (var item in itemStructure)
+                {
+                    if (item.id == tab.id)
+                    {
+                        //this.tabList.Add(new Page(item.id, item.name, order));
+                        TabPage tp = new TabPage();
+                        tp.Name = item.id;
+                        tp.Tag = item.id;
+                        tp.Text = item.name;
+                        tp.DoubleClick += Tp_DoubleClick;
+                        tp.Click += Tp_Click;
+
+
+                        WebView2 wv = new WebView2();
+                        //CoreWebView2 cww2 = new CoreWebView2("http://jfkasdj.kk");
+                        //wv.CoreWebView2.
+                        wv.Height = tabControl_browser.Height - this.tabViewTopOffset;
+                        wv.Width = tabControl_browser.Width - this.tabViewPadding;
+
+                        string filePath = Path.Combine(root, item.path, item.name + ".html");
+                        string content = File.ReadAllText(filePath);
+                        string context = content;
+
+                        if (content != null)
+                        {
+                            // Content should be written withid <section id='bookerContent'... tag
+                            // Check if file opened (by header "<!DOCTYPE html>")
+                            if (content.Contains("<!DOCTYPE html>"))
+                            {
+
+                                // okay, it is opened file
+                                // check if there are no body tags
+                                if (content.Contains("<body") && content.Contains("</body>"))
+                                {
+                                    HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
+                                    doc.Load(filePath);
+                                    doc.OptionFixNestedTags = true;
+                                    HtmlNode node = doc.DocumentNode.SelectSingleNode("//section");
+                                    if (node != null)
+                                    {
+                                        context = node.InnerHtml;
+                                    }
+                                    else
+                                    {
+                                        MessageBox.Show("There are some problems with document " + item.name + ".html. Try to remove all document data except content placed <section> and </section> tags (section tags should be removed).", "Document structure error!");
+                                    }
+                                }
+                                else
+                                {
+                                    MessageBox.Show("There are some problems with document " + item.name + ".html. Try to remove all document data except content placed <section> and </section> tags (section tags should be removed).", "Document structure error!");
+                                }
+                            }
+                            // Renew template of the page based on Template and Styel
+                            HtmlTemplates htm = new HtmlTemplates(UserConfig.languageCode);
+                            string resultHtml = HtmlTemplates.HtmlBuildHtmlPage(bf, item, context, htm.GetScriptSection(), true);
+                            File.WriteAllText(filePath, resultHtml);
+                            //wv.CoreWebView2.NavigateToString(content);
+                            Uri uri = new Uri(filePath);
+                            // wv.CoreWebView2.Navigate("file:///" + Path.Combine(root, item.path, item.name + ".html"));
+                            wv.Source = (uri);
+                            tp.Controls.Add(wv);
+                            wv.WebMessageReceived += Wv_WebMessageReceived;
+                            // wv.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
+                            tabControl_browser.Controls.Add(tp);
+                            if (this.activeItemId == tab.id)
+                            {
+                                tabControl_browser.SelectedIndex = order;
+                            }
+                            order++;
+                        }
+                        else
+                        {
+                            MessageBox.Show("Document " + item.name + ".html. not found!", "Document not found error!");
+                        }
+                    }
+                }
+            }
+        }
 
         private void Btn_openNavigationPanel_MouseHover(object? sender, EventArgs e)
         {
@@ -346,23 +355,23 @@ namespace TefTeleNote_WF
                         }
                     }
                     int itemToRemoveIndex = -1;
-                    for (int i = 0; i < openedPageList.Count; i++)
+                    for (int i = 0; i < tabList.Count; i++)
                     {
-                        if (openedPageList[i].id == id)
+                        if (tabList[i].id == id)
                         {
                             itemToRemoveIndex = i;
                         }
                         if (itemToRemoveIndex != -1)
                         {
-                            openedPageList[i].order = openedPageList[i].order - 1;
+                            tabList[i].order = tabList[i].order - 1;
                         }
                     }
                     if (itemToRemoveIndex > -1)
                     {
-                        openedPageList.RemoveAt(itemToRemoveIndex);
+                        tabList.RemoveAt(itemToRemoveIndex);
                     }
                 }
-
+                this.UpdateTabList();
             }
         }
 
@@ -386,9 +395,9 @@ namespace TefTeleNote_WF
             this.panel_bookNavigation.Height = this.ClientSize.Height - this.menuStrip_main.Height - 1;
             this.panel_bookNavBottomManage.Top = this.panel_bookNavigation.Height - this.panel_bookNavBottomManage.Height - 2;
 
-            this.treeview_docStr.Width = this.panel_bookNavigation.Width;
-            this.treeview_docStr.Left = 0;
-            this.treeview_docStr.Height = this.panel_bookNavigation.Height - this.panel_bookNavBottomManage.Height - this.treeview_docStr.Top - this.tabViewPadding * 2;
+            this.treeview_docStruct.Width = this.panel_bookNavigation.Width;
+            this.treeview_docStruct.Left = 0;
+            this.treeview_docStruct.Height = this.panel_bookNavigation.Height - this.panel_bookNavBottomManage.Height - this.treeview_docStruct.Top - this.tabViewPadding * 2;
 
 
             foreach (TabPage tabPage in this.tabControl_browser.Controls)
@@ -415,9 +424,11 @@ namespace TefTeleNote_WF
             if (tnode != null)
             {
                 var id = tnode.Tag;
+                treeview_docStruct.SelectedNode = tnode;
+                this._selectedNode = tnode;
                 if (e.Button == MouseButtons.Left)
                 {
-                    if (!this.openedPageList.Contains(id))
+                    if (!this.tabList.Contains(id))
                     {
                         ItemStructure item = null;
                         foreach (var page in this.itemStructure)
@@ -430,7 +441,7 @@ namespace TefTeleNote_WF
                                     return;
                                 }
                                 item = page;
-                                foreach (Page opens in this.openedPageList)
+                                foreach (Page opens in this.tabList)
                                 {
                                     if (opens.id == item.id)
                                     {
@@ -441,7 +452,7 @@ namespace TefTeleNote_WF
                             }
                         }
 
-                        this.openedPageList.Add(new Page(item.id, item.name, openedPageList.Count));
+                        this.tabList.Add(new Page(item.id, item.name, tabList.Count));
                         TabPage tp = new TabPage();
                         tp.Name = item.id;
                         tp.Tag = item.id;
@@ -497,9 +508,10 @@ namespace TefTeleNote_WF
                             tp.Controls.Add(wv);
                             wv.WebMessageReceived += Wv_WebMessageReceived;
                             tabControl_browser.Controls.Add(tp);
-                            this.tabControl_browser.SelectedIndex = openedPageList.Count - 1;
+                            this.tabControl_browser.SelectedIndex = tabList.Count - 1;
                             this.activeItemId = item.id;
                             this.panel_bookNavigation.Visible = false;
+                            this.UpdateTabList();
                         }
                         else
                         {
@@ -511,39 +523,192 @@ namespace TefTeleNote_WF
                 else
                 {
                     // Open CONTEXT MENU
+                  //  MessageBox.Show((string) id);
+                    var positionX = Cursor.Position.X;
+                    var positionY = Cursor.Position.Y;
+                    //this.contextMenuStrip_treeNode.Location = new Point(positionX, positionY);
+                    this.contextMenuStrip_treeNode.Items.Clear();
+                    this.contextMenuStrip_treeNode.Visible = true;
+                    //Point loc = new Point(positionX - this.Left, positionY - this.Top);
+                    Point loc = e.Location;
+                    //this.contextMenuStrip_treeNode.Location = loc;
 
+                    this.contextSelectedId = (string)id;
+
+                    this.contextStruct = ItemStructure.GetItemStructById(this.itemStructure, (string)id);
+                    if (contextStruct == null) { return; }
+                    if (contextStruct.type == 1)
+                    {
+                        ToolStripMenuItem tsmi = new ToolStripMenuItem();
+                        tsmi.Text = "Rename Page";
+                        tsmi.Tag = this.contextSelectedId;
+                        tsmi.Click += Tsmi_Click_RENAME;
+                        this.contextMenuStrip_treeNode.Items.Add(tsmi);
+
+                        tsmi = new ToolStripMenuItem();
+                        tsmi.Text = "Remove Page";
+                        tsmi.Tag = this.contextSelectedId;
+                        tsmi.Click += Tsmi_Click_REMOVE; ;
+                        this.contextMenuStrip_treeNode.Items.Add(tsmi);
+                    }
+                    else if (contextStruct.type == 2)
+                    {
+                        ToolStripMenuItem tsmi = new ToolStripMenuItem();
+                        tsmi.Text = "Rename Folder";
+                        tsmi.Tag = this.contextSelectedId;
+                        tsmi.Click += Tsmi_Click_RENAME;
+                        this.contextMenuStrip_treeNode.Items.Add(tsmi);
+
+                        tsmi = new ToolStripMenuItem();
+                        tsmi.Text = "Remove Folder";
+                        tsmi.Tag = this.contextSelectedId;
+                        tsmi.Click += Tsmi_Click_REMOVE; ;
+                        this.contextMenuStrip_treeNode.Items.Add(tsmi);
+                    }
+                    this.contextMenuStrip_treeNode.Show((Control)sender, loc);
                 }
 
             }
         }
 
-        private void Treeview_docStr_DragEnter(object? sender, DragEventArgs e)
+        private void Tsmi_Click_REMOVE(object? sender, EventArgs e)
         {
-            e.Effect = DragDropEffects.Move;
-        }
-
-        private void Treeview_docStr_DragDrop(object? sender, DragEventArgs e)
-        {
-            TreeNode sourceNode = _selectedNode;
-            if (sourceNode != null)
+            if (this.contextStruct.type == 1)
             {
-                if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
+                var prompt = MessageBox.Show("Do you really want to remove page '" + this.contextStruct.name + "' ?", "Item destruction", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (prompt == DialogResult.OK)
                 {
-                    Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
-                    TreeNode destinationNode = ((TreeView)sender).GetNodeAt(pt);
-                    if (destinationNode != null)
+                    var idToDel = this.contextSelectedId;
+                    var path = Path.Combine(this.root, this.contextStruct.path, this.contextStruct.name) + ".html";
+                    File.Delete(path);
+                    treeview_docStruct.BeginUpdate();
+                    treeview_docStruct.Nodes.Remove(_selectedNode);
+                    treeview_docStruct.EndUpdate();
+
+                    foreach (var its in this.itemStructure)
                     {
-                        //ur target
-                        MessageBox.Show(pt.Y.ToString(), pt.X.ToString());
+                        if (its.id == idToDel)
+                        {
+                            this.itemStructure.Remove(its);
+                            break;
+                        }
+                    }
+
+                    int index = 0;
+                    foreach (TabPage tab in this.tabControl_browser.Controls)
+                    {
+                        if (tab.Tag == idToDel)
+                        {
+                            this.tabControl_browser.Controls.RemoveAt(index);
+                            break;
+                        }
+                        index++;
+                    }
+
+                    index = 0;
+                    foreach (ItemStructure its in this.itemStructure)
+                    {
+                        if (its.id == idToDel)
+                        {
+                            this.itemStructure.RemoveAt(index);
+                            break;
+                        }
+                    }
+
+                    this.UpdateTabList();
+                    this.SaveBookStruture();
+                    this.SaveBookManifest();
+                }
+
+            } 
+            else if (this.contextStruct.type == 2)
+            {
+                var prompt = MessageBox.Show("Do you really want to remove folder '" + this.contextStruct.name + " ?", "Item destruction", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (prompt == DialogResult.OK)
+                {
+                    var idToDel = this.contextSelectedId;
+                    var path = Path.Combine(this.root, this.contextStruct.path, this.contextStruct.name);
+                    if (Directory.Exists(path))
+                    {
+                        if (Directory.GetFiles(path).Length > 0)
+                        {
+                            MessageBox.Show("Move or remove all Pages before remove directory.", "Directory not empty!");
+                            return;
+                        }
+
+                        Directory.Delete(path);
+                        treeview_docStruct.BeginUpdate();
+                        treeview_docStruct.Nodes.Remove(_selectedNode);
+                        treeview_docStruct.EndUpdate();
+
+                        foreach (var its in this.itemStructure)
+                        {
+                            if (its.id == idToDel)
+                            {
+                                this.itemStructure.Remove(its);
+                                break;
+                            }
+                        }
+
+                        int index = 0;
+                        foreach (ItemStructure its in this.itemStructure)
+                        {
+                            if (its.id == idToDel)
+                            {
+                                this.itemStructure.RemoveAt(index);
+                                break;
+                            }
+                        }
+
+                        this.SaveBookStruture();
+                        this.SaveBookManifest();
                     }
                 }
             }
         }
 
+        private void Tsmi_Click_RENAME(object? sender, EventArgs e)
+        {
+            MessageBox.Show(this.contextSelectedId);
+        }
+
+
+        private void Treeview_docStr_DragEnter(object? sender, DragEventArgs e)
+        {
+
+                    //e.Effect = DragDropEffects.Move;
+
+        }
+
+        private void Treeview_docStr_DragDrop(object? sender, DragEventArgs e)
+        {
+            //TreeNode sourceNode = _selectedNode;
+            //if (sourceNode != null)
+            //{
+            //    if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
+            //    {
+            //        Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
+            //        TreeNode destinationNode = ((TreeView)sender).GetNodeAt(pt);
+            //        if (destinationNode != null)
+            //        {
+            //            ur target
+            //            MessageBox.Show(pt.Y.ToString(), pt.X.ToString());
+            //        }
+            //    }
+            //}
+        }
+
         private void Treeview_docStr_ItemDrag(object? sender, ItemDragEventArgs e)
         {
-            DoDragDrop(e.Item, DragDropEffects.Move);
-            _selectedNode = (TreeNode)e.Item;
+            //var tnode = (TreeNode)e.Node;
+            //if (tnode != null)
+            //{
+            //    if (e.Button == MouseButtons.Left)
+            //    {
+            //        DoDragDrop(e.Item, DragDropEffects.Move);
+            //        _selectedNode = (TreeNode)e.Item;
+            //    }
+            //}
         }
 
         private async void BookViewForm_Load(object? sender, EventArgs e)
@@ -555,7 +720,7 @@ namespace TefTeleNote_WF
         {
             if (itemStructure.Count > 0)
             {
-                treeview_docStr.BeginUpdate();
+                treeview_docStruct.BeginUpdate();
                 foreach (ItemStructure item in itemStructure)
                 {
                     int lastlevel = 0;
@@ -564,7 +729,7 @@ namespace TefTeleNote_WF
                     //Contents item = Library.collection[Library.idCollection.Count - 1];
                     TreeNode tren = new TreeNode(item.name);
                     tren.Tag = item.id;
-                    treeview_docStr.Nodes.Add(tren);
+                    treeview_docStruct.Nodes.Add(tren);
 
                 }
                 //TreeNodeCollection tnk = treeview_docStr.Nodes;
@@ -577,7 +742,7 @@ namespace TefTeleNote_WF
                 //    treeview_docStr.Nodes.Add(tren);
 
                 //}
-                treeview_docStr.EndUpdate();
+                treeview_docStruct.EndUpdate();
             }
         }
 
@@ -613,6 +778,7 @@ namespace TefTeleNote_WF
                 //    tabControl_browser.TabPages.Insert(2, selectedTab);
                 //    tabControl_browser.SelectedTab = selectedTab;
                 //}
+                this.UpdateTabList();
             }
         }
 
@@ -623,6 +789,18 @@ namespace TefTeleNote_WF
                 selectedTab = tabControl_browser.SelectedTab;
                 mouseX = Cursor.Position.X;
                 activeItemId = tabControl_browser.SelectedTab.Name;
+            }
+        }
+
+        public void UpdateTabList()
+        {
+            this.tabList.Clear();
+            int counter = 0;
+            foreach(TabPage tab in tabControl_browser.TabPages)
+            {
+                Page pg = new Page((string)tab.Tag, (string)tab.Text, counter);
+                this.tabList.Add(pg);
+                counter++;
             }
         }
 
@@ -683,8 +861,8 @@ namespace TefTeleNote_WF
             this.SaveBookManifest();
         }
 
-  
 
+        #region TRASH
         public string EntityToUnicode(string html)
         {
             var replacements = new Dictionary<string, string>();
@@ -764,6 +942,8 @@ namespace TefTeleNote_WF
             await Task.Delay(10);
 
         }
+        #endregion TRASH
+
 
         public void UpdateTree(List<Contents> collection)
         {
@@ -771,14 +951,14 @@ namespace TefTeleNote_WF
             {
                 //TreeNodeCollection tnk = treeview_docStr.Nodes;
                 //tnk.Clear();
-                treeview_docStr.BeginUpdate();
+                treeview_docStruct.BeginUpdate();
                 int lastlevel = 0;
                 int lastCounter = 0;
 
                 Contents item = Library.collection[Library.idCollection.Count - 1];
                 TreeNode tren = new TreeNode(item.Name);
                 tren.Tag = item.Id;
-                treeview_docStr.Nodes.Add(tren);
+                treeview_docStruct.Nodes.Add(tren);
 
                 //foreach (var item in collection)
                 //{
@@ -787,7 +967,7 @@ namespace TefTeleNote_WF
                 //    treeview_docStr.Nodes.Add(tren);
 
                 //}
-                treeview_docStr.EndUpdate();
+                treeview_docStruct.EndUpdate();
             }
         }
 
@@ -849,7 +1029,7 @@ namespace TefTeleNote_WF
                             this.SaveBookManifest();
                             this.SaveBookStruture();
 
-                            this.AddItemInTreeView(its);
+                            this.AddItemIntoTreeView(its);
                         
                     };
                 }
@@ -903,7 +1083,7 @@ namespace TefTeleNote_WF
                             this.SaveBookManifest();
                             this.SaveBookStruture();
 
-                            this.AddItemInTreeView(its);
+                            this.AddItemIntoTreeView(its);
                         }
                     };
                 }
@@ -936,9 +1116,9 @@ namespace TefTeleNote_WF
             File.WriteAllText(this.openedBook.structPath, structure);
         }
 
-        private void AddItemInTreeView(ItemStructure item)
+        private void AddItemIntoTreeView(ItemStructure item)
         {
-            treeview_docStr.BeginUpdate();
+            treeview_docStruct.BeginUpdate();
 
                 int lastlevel = 0;
                 int lastCounter = 0;
@@ -965,9 +1145,9 @@ namespace TefTeleNote_WF
                 tren = new TreeNode("/ " + marger + item.name);
             }
                 tren.Tag = item.id;
-                treeview_docStr.Nodes.Add(tren);
+                treeview_docStruct.Nodes.Add(tren);
 
-            treeview_docStr.EndUpdate();
+            treeview_docStruct.EndUpdate();
         }
 
 
@@ -1059,12 +1239,12 @@ namespace TefTeleNote_WF
         /// <returns></returns>
         public WebView2 GetActiveWevView()
         {
-            if (!string.IsNullOrEmpty(activeItemId))
+            if (!string.IsNullOrEmpty(this.activeItemId))
             {
                 WebView2 wew = null;
                 foreach (TabPage tp in tabControl_browser.TabPages)
                 {
-                    if (tp.Name == activeItemId)
+                    if (tp.Name == this.activeItemId)
                     {
                         foreach (var control in tp.Controls)
                         {
@@ -1080,6 +1260,12 @@ namespace TefTeleNote_WF
             return null;
         }
 
+
+    //    if(e.Button == MouseButtons.Right)
+    //    {
+    //        TreeNode destinationNode = ((TreeView)sender).GetNodeAt(new Point(e.X, e.Y));
+    //    //Do stuff
+    //}
 
     }
 }
