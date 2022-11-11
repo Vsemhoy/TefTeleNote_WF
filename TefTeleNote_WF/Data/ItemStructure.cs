@@ -18,6 +18,8 @@ namespace TefTeleNote_WF.Data
         public int order { get; set; }
         public int level { get; set; }
         public int tabIndex { get; set; }
+
+        public bool isOpen;
         public ItemStructure()
         {
             this.id = Generators.ID.Generate(32);
@@ -27,6 +29,7 @@ namespace TefTeleNote_WF.Data
             this.level = 1;
             this.tabIndex = 1;
             this.path = String.Empty;
+            this.isOpen = true;
         }
 
         public static ItemStructure GetItemStructById(List<ItemStructure> its, string id)
@@ -42,6 +45,28 @@ namespace TefTeleNote_WF.Data
                 }
             }
             return null;
+        }
+
+        internal static List<ItemStructure> Reorder(List<ItemStructure> bookStructure, ItemStructure sourcePage)
+        {
+            List<ItemStructure> newStruct = new List<ItemStructure>();
+            int torder = sourcePage.order;
+            int order = 0;
+            foreach (ItemStructure istru in bookStructure)
+            {
+                if (torder == order)
+                {
+                    newStruct.Add(sourcePage);
+                    order++;
+                }
+                if (istru.id != sourcePage.id)
+                {
+                    istru.order = order;
+                    newStruct.Add(istru);
+                    order++;
+                }
+            }
+            return newStruct;
         }
     }
 

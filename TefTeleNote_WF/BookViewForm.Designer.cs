@@ -389,7 +389,7 @@
             // 
             this.treeview_docStruct.AllowDrop = true;
             this.treeview_docStruct.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.treeview_docStruct.CheckBoxes = true;
+            this.treeview_docStruct.CheckBoxes = false;
             this.treeview_docStruct.ItemHeight = 20;
             this.treeview_docStruct.Location = new System.Drawing.Point(1, 40);
             this.treeview_docStruct.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
@@ -440,7 +440,7 @@
             // contextMenuStrip_treeNode
             // 
             this.contextMenuStrip_treeNode.Name = "contextMenuStrip_treeNode";
-            this.contextMenuStrip_treeNode.Size = new System.Drawing.Size(181, 26);
+            this.contextMenuStrip_treeNode.Size = new System.Drawing.Size(61, 4);
             // 
             // BookViewForm
             // 
@@ -452,6 +452,7 @@
             this.Controls.Add(this.tabControl_browser);
             this.Controls.Add(this.menuStrip_main);
             this.Controls.Add(this.menuStrip1);
+            this.MinimumSize = new System.Drawing.Size(600, 0);
             this.Name = "BookViewForm";
             this.Text = "Form1";
             this.menuStrip_main.ResumeLayout(false);

@@ -34,7 +34,7 @@ namespace TefTeleNote_WF
         /// <summary>
         /// File structure of the book (name, order, folders, id's etc)
         /// </summary>
-        public List<ItemStructure> itemStructure;
+        public List<ItemStructure> bookStructure;
         /// <summary>
         /// List of the pages opened AS TABS
         /// </summary>
@@ -45,9 +45,11 @@ namespace TefTeleNote_WF
         public string activeItemId = string.Empty;
         public string activeItemName = string.Empty;
         public string activeDirectory = string.Empty;
+        public int activeLevel = 0;
         public string contextSelectedId = string.Empty;
         public ItemStructure contextStruct = null;
-        public int activeLevel = 0;
+
+        private string activeFolderPath = string.Empty;
 
 
         private int tabViewPadding = 6;
@@ -58,11 +60,12 @@ namespace TefTeleNote_WF
         /// </summary>
         public string root;
 
+        public Color treeFolderNameColor;
         public int tabHeight;
         public int tabWidth;
 
         public bool editItemMode = false;
-
+        public bool tabSaved = false;
 
         private TreeNode _selectedNode;
 
@@ -75,6 +78,8 @@ namespace TefTeleNote_WF
 
             this.menuStrip_main.BackColor = Color.LightGray;
             this.BackColor = Color.LightGray;
+            this.treeFolderNameColor = Color.DimGray;
+            
 
 
             this.tabHeight = this.tabControl_browser.Height;
@@ -91,7 +96,7 @@ namespace TefTeleNote_WF
             //this.tabControl_browser.ItemSize = new Size(200, 40);
             openedBook = bf;
             this.root = bf.directory;
-            this.itemStructure = BooksFilesUtils.LoadBookStructure(new DirectoryInfo(root));
+            this.bookStructure = BooksFilesUtils.LoadBookStructure(new DirectoryInfo(root));
 
             
             this.treeview_docStruct.ItemDrag += Treeview_docStr_ItemDrag;
@@ -100,6 +105,7 @@ namespace TefTeleNote_WF
             
             this.Load += BookViewForm_Load;
             this.treeview_docStruct.NodeMouseClick += Treeview_docStr_NodeMouseClick;
+            this.treeview_docStruct.NodeMouseDoubleClick += Treeview_docStruct_NodeMouseDoubleClick;
 
             this.LoadTabsOnLoad(bf);
 
@@ -121,6 +127,8 @@ namespace TefTeleNote_WF
             this.tool_savePage.Click += Tool_savePage_Click;
             this.tool_saveBook.Click += Tool_saveBook_Click;
         }
+
+
 
         /// <summary>
         /// Get messages from View (open tabs, go to browser and so on...)
@@ -144,7 +152,7 @@ namespace TefTeleNote_WF
             int order = 0;
             foreach (Page tab in bf.tabs)
             {
-                foreach (var item in itemStructure)
+                foreach (var item in bookStructure)
                 {
                     if (item.id == tab.id)
                     {
@@ -206,6 +214,7 @@ namespace TefTeleNote_WF
                             wv.Source = (uri);
                             tp.Controls.Add(wv);
                             wv.WebMessageReceived += Wv_WebMessageReceived;
+                            wv.KeyPress += Wv_KeyPress;
                             // wv.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
                             tabControl_browser.Controls.Add(tp);
                             if (this.activeItemId == tab.id)
@@ -222,6 +231,25 @@ namespace TefTeleNote_WF
                 }
             }
         }
+
+
+        private void Wv_KeyPress(object? sender, KeyPressEventArgs e)
+        {
+            if (this.tabSaved == true)
+            {
+                var act = this.activeItemId;
+                foreach (TabPage tp in tabControl_browser.Controls)
+                {
+                    if (tp.Tag == act)
+                    {
+                        tp.Text = tp.Text + "*";
+                        break;
+                    }
+                }
+                this.tabSaved = false;
+            }
+        }
+
 
         private void Btn_openNavigationPanel_MouseHover(object? sender, EventArgs e)
         {
@@ -342,7 +370,7 @@ namespace TefTeleNote_WF
                     int index = tabControl_browser.SelectedIndex;
                     tabControl_browser.TabPages.Remove(selectedTab);
                     int counter = 0;
-                    foreach (var item in this.itemStructure)
+                    foreach (var item in this.bookStructure)
                     {
                         if (item.id == id)
                         {
@@ -418,12 +446,14 @@ namespace TefTeleNote_WF
             }
         }
 
-        private void Treeview_docStr_NodeMouseClick(object? sender, TreeNodeMouseClickEventArgs e)
+
+        private void Treeview_docStruct_NodeMouseDoubleClick(object? sender, TreeNodeMouseClickEventArgs e)
         {
             var tnode = (TreeNode)e.Node;
             if (tnode != null)
             {
                 var id = tnode.Tag;
+                _selectedNode = tnode;
                 treeview_docStruct.SelectedNode = tnode;
                 this._selectedNode = tnode;
                 if (e.Button == MouseButtons.Left)
@@ -431,16 +461,22 @@ namespace TefTeleNote_WF
                     if (!this.tabList.Contains(id))
                     {
                         ItemStructure item = null;
-                        foreach (var page in this.itemStructure)
+                        foreach (var page in this.bookStructure)
                         {
                             if (page.id == id)
                             {
                                 // Is it folder?
                                 if (page.type == 2)
                                 {
+                                    this.activeDirectory = Path.Combine(page.path, page.name);
+                                    this.activeLevel = page.level;
+                                    this.activeItemId = page.id;
                                     return;
                                 }
                                 item = page;
+                                this.activeDirectory = page.path;
+                                this.activeLevel = page.level;
+                                this.activeItemId = page.id;
                                 foreach (Page opens in this.tabList)
                                 {
                                     if (opens.id == item.id)
@@ -505,6 +541,7 @@ namespace TefTeleNote_WF
                             Uri uri = new Uri(filePath);
                             // wv.CoreWebView2.Navigate("file:///" + Path.Combine(root, item.path, item.name + ".html"));
                             wv.Source = (uri);
+                            wv.KeyPress += Wv_KeyPress;
                             tp.Controls.Add(wv);
                             wv.WebMessageReceived += Wv_WebMessageReceived;
                             tabControl_browser.Controls.Add(tp);
@@ -519,11 +556,37 @@ namespace TefTeleNote_WF
                         }
 
                     }
-                } 
+                }
+                else
+                {
+                  /// If double click
+                }
+
+            }
+        }
+
+        private void Treeview_docStr_NodeMouseClick(object? sender, TreeNodeMouseClickEventArgs e)
+        {
+            var tnode = (TreeNode)e.Node;
+            if (tnode != null)
+            {
+                var id = tnode.Tag;
+                treeview_docStruct.SelectedNode = tnode;
+                this._selectedNode = tnode;
+                ItemStructure its = ItemStructure.GetItemStructById(this.bookStructure, (string)id);
+                this.activeLevel = its.level;
+                this.activeDirectory = its.path;
+                this.activeItemId = its.id;
+                this.activeItemName = its.name;
+
+                if (e.Button == MouseButtons.Left)
+                {
+
+                }
                 else
                 {
                     // Open CONTEXT MENU
-                  //  MessageBox.Show((string) id);
+                    //  MessageBox.Show((string) id);
                     var positionX = Cursor.Position.X;
                     var positionY = Cursor.Position.Y;
                     //this.contextMenuStrip_treeNode.Location = new Point(positionX, positionY);
@@ -535,7 +598,7 @@ namespace TefTeleNote_WF
 
                     this.contextSelectedId = (string)id;
 
-                    this.contextStruct = ItemStructure.GetItemStructById(this.itemStructure, (string)id);
+                    this.contextStruct = ItemStructure.GetItemStructById(this.bookStructure, (string)id);
                     if (contextStruct == null) { return; }
                     if (contextStruct.type == 1)
                     {
@@ -567,9 +630,9 @@ namespace TefTeleNote_WF
                     }
                     this.contextMenuStrip_treeNode.Show((Control)sender, loc);
                 }
-
             }
         }
+
 
         private void Tsmi_Click_REMOVE(object? sender, EventArgs e)
         {
@@ -585,11 +648,11 @@ namespace TefTeleNote_WF
                     treeview_docStruct.Nodes.Remove(_selectedNode);
                     treeview_docStruct.EndUpdate();
 
-                    foreach (var its in this.itemStructure)
+                    foreach (var its in this.bookStructure)
                     {
                         if (its.id == idToDel)
                         {
-                            this.itemStructure.Remove(its);
+                            this.bookStructure.Remove(its);
                             break;
                         }
                     }
@@ -606,11 +669,11 @@ namespace TefTeleNote_WF
                     }
 
                     index = 0;
-                    foreach (ItemStructure its in this.itemStructure)
+                    foreach (ItemStructure its in this.bookStructure)
                     {
                         if (its.id == idToDel)
                         {
-                            this.itemStructure.RemoveAt(index);
+                            this.bookStructure.RemoveAt(index);
                             break;
                         }
                     }
@@ -641,21 +704,21 @@ namespace TefTeleNote_WF
                         treeview_docStruct.Nodes.Remove(_selectedNode);
                         treeview_docStruct.EndUpdate();
 
-                        foreach (var its in this.itemStructure)
+                        foreach (var its in this.bookStructure)
                         {
                             if (its.id == idToDel)
                             {
-                                this.itemStructure.Remove(its);
+                                this.bookStructure.Remove(its);
                                 break;
                             }
                         }
 
                         int index = 0;
-                        foreach (ItemStructure its in this.itemStructure)
+                        foreach (ItemStructure its in this.bookStructure)
                         {
                             if (its.id == idToDel)
                             {
-                                this.itemStructure.RemoveAt(index);
+                                this.bookStructure.RemoveAt(index);
                                 break;
                             }
                         }
@@ -676,39 +739,99 @@ namespace TefTeleNote_WF
         private void Treeview_docStr_DragEnter(object? sender, DragEventArgs e)
         {
 
-                    //e.Effect = DragDropEffects.Move;
+                    e.Effect = DragDropEffects.Move;
 
         }
 
         private void Treeview_docStr_DragDrop(object? sender, DragEventArgs e)
         {
-            //TreeNode sourceNode = _selectedNode;
-            //if (sourceNode != null)
-            //{
-            //    if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
-            //    {
-            //        Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
-            //        TreeNode destinationNode = ((TreeView)sender).GetNodeAt(pt);
-            //        if (destinationNode != null)
-            //        {
-            //            ur target
-            //            MessageBox.Show(pt.Y.ToString(), pt.X.ToString());
-            //        }
-            //    }
-            //}
+            TreeNode sourceNode = _selectedNode;
+            if (sourceNode != null)
+            {
+                if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
+                {
+                    Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
+                    TreeNode destinationNode = ((TreeView)sender).GetNodeAt(pt);
+                    if (destinationNode != null)
+                    {
+                        MessageBox.Show(destinationNode.Text.ToString());
+                        //MessageBox.Show(pt.Y.ToString(), pt.X.ToString());
+                        ItemStructure sourcePage = ItemStructure.GetItemStructById(this.bookStructure, sourceNode.Tag.ToString());
+                        ItemStructure targetPage = ItemStructure.GetItemStructById(this.bookStructure, destinationNode.Tag.ToString());
+
+                        if (targetPage.type == 1)
+                        {
+                            // if Plain page
+                            if (sourcePage.type == 1)
+                            {
+                                // Move Page to Page level and reorder
+                                int newLevel = targetPage.level;
+                                string sourceFile = Path.Combine(this.root, sourcePage.path, sourcePage.name + ".html");
+                                File.Move(sourceFile, Path.Combine(this.root, targetPage.path, sourcePage.name + ".html"));
+
+                                sourcePage.path = targetPage.path;
+                                sourcePage.level = newLevel;
+                                sourcePage.order = targetPage.order + 1;
+
+                                this.bookStructure = ItemStructure.Reorder(this.bookStructure, sourcePage);
+
+                            }
+                            else if (sourcePage.type == 2)
+                            {
+                                // Move folder to page level and reorder
+                                return;
+                                /// too hard
+                            }
+                        }
+                        else  if (targetPage.type == 2)
+                        {
+                            // If FOLDER
+                            if (sourcePage.type == 1)
+                            {
+                                // Move Page to Page level and reorder
+                                int newLevel = targetPage.level + 1;
+                                string targetFolder = Path.Combine(targetPage.path, targetPage.name);
+                                string sourceFile = Path.Combine(this.root, sourcePage.path, sourcePage.name + ".html");
+                                File.Move(sourceFile, Path.Combine(this.root, targetFolder, sourcePage.name + ".html"));
+
+                                sourcePage.path = targetFolder;
+                                sourcePage.level = newLevel;
+                                sourcePage.order = targetPage.order + 1;
+
+                                this.bookStructure = ItemStructure.Reorder(this.bookStructure, sourcePage);
+
+                            }
+                            else if (sourcePage.type == 2)
+                            {
+                                // Move folder to folder level and reorder
+                                if (targetPage.level < 2) { return; }
+                                return;
+
+                                /// too hard
+                            }
+                        }
+                        //this.LoadTabsOnLoad(this.openedBook);
+                        this.SaveBookStruture();
+                        this.FillBookTree();
+                    }
+                }
+            }
         }
 
         private void Treeview_docStr_ItemDrag(object? sender, ItemDragEventArgs e)
         {
-            //var tnode = (TreeNode)e.Node;
-            //if (tnode != null)
-            //{
-            //    if (e.Button == MouseButtons.Left)
-            //    {
-            //        DoDragDrop(e.Item, DragDropEffects.Move);
-            //        _selectedNode = (TreeNode)e.Item;
-            //    }
-            //}
+            var tnode = (TreeNode)e.Item;
+            if (tnode != null)
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    _selectedNode = tnode;
+                    treeview_docStruct.SelectedNode = tnode;
+                    DoDragDrop(e.Item, DragDropEffects.Move);
+                }
+            }
+
+
         }
 
         private async void BookViewForm_Load(object? sender, EventArgs e)
@@ -718,32 +841,84 @@ namespace TefTeleNote_WF
 
         private async void FillBookTree()
         {
-            if (itemStructure.Count > 0)
+            try
             {
-                treeview_docStruct.BeginUpdate();
-                foreach (ItemStructure item in itemStructure)
+                this.treeview_docStruct.Nodes.Clear();
+                if (bookStructure.Count > 0)
                 {
-                    int lastlevel = 0;
+                    treeview_docStruct.BeginUpdate();
+                    int lastlevel = 1;
                     int lastCounter = 0;
+                    TreeNode parentNode = new TreeNode();
+                    List<TreeNode> tn = new List<TreeNode>();
+                    List<TreeNode> levels = new List<TreeNode>();
+                    /// first and second elements are nothing
+                    levels.Add(parentNode);
+                    levels.Add(parentNode);
+                    foreach (ItemStructure item in bookStructure)
+                    {
+                    
+                        //Contents item = Library.collection[Library.idCollection.Count - 1];
+                        TreeNode tren = new TreeNode(item.name);
+                        tren.Tag = item.id;
+                        tren.Name = item.name;
 
-                    //Contents item = Library.collection[Library.idCollection.Count - 1];
-                    TreeNode tren = new TreeNode(item.name);
-                    tren.Tag = item.id;
-                    treeview_docStruct.Nodes.Add(tren);
 
+                        if (item.type == 1)
+                        {
+                            tren.Text =  item.name;
+                        }
+                        foreach (Page tab in this.tabList)
+                        {
+                            if (tab.id == item.id)
+                            {
+
+                                tren.ForeColor = Color.DarkBlue;
+                                tren.Text = "● " + item.name;
+                            }
+                        }
+                        if (item.type == 2)
+                        {
+                            string names  = "/ " + item.name;
+                            tren.Text = names;
+                            tren.ForeColor = this.treeFolderNameColor;
+                            if (item.isOpen)
+                            {
+                                tren.Expand();
+                            }
+
+                            if (levels.Count <= item.level)
+                            {
+                                levels.Add(tren);
+
+                            } 
+                            else
+                            {
+                                levels[item.level] = tren;
+                            }
+                        }
+                        if (item.level == 1 || item.level == 0)
+                        {
+                            this.treeview_docStruct.Nodes.Add(tren);
+                        } 
+                        else
+                        {
+                            levels[item.level - 1].Nodes.Add(tren);
+                        }
+
+                        lastlevel = item.level;
+                    }
+                    
+                    treeview_docStruct.EndUpdate();
                 }
-                //TreeNodeCollection tnk = treeview_docStr.Nodes;
-                //tnk.Clear();
 
-                //foreach (var item in collection)
-                //{
-                //    TreeNode tren = new TreeNode(item.Name);
-                //    tren.Tag = item.Id;
-                //    treeview_docStr.Nodes.Add(tren);
-
-                //}
-                treeview_docStruct.EndUpdate();
             }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error 919");
+            }
+
+    
         }
 
         private void tabControl_browser_MouseUp(object? sender, MouseEventArgs e)
@@ -802,6 +977,25 @@ namespace TefTeleNote_WF
                 this.tabList.Add(pg);
                 counter++;
             }
+            this.UpdateTreeItemState();
+        }
+
+        public void UpdateTreeItemState()
+        {
+            foreach (TreeNode tren in this.treeview_docStruct.Nodes)
+            {
+                tren.Text = tren.Name.Trim();
+                tren.ForeColor = Color.Black;
+                foreach (Page pg in this.tabList)
+                {
+                    if (pg.id == tren.Tag)
+                    {
+                        tren.ForeColor = Color.DarkBlue;
+                        tren.Text = "● " + tren.Name;
+                        break;
+                    }
+                }
+            }
         }
 
         private async void button1_Click(object sender, EventArgs e)
@@ -841,7 +1035,7 @@ namespace TefTeleNote_WF
                         result = result.TrimStart('"');
                         result = result.TrimEnd('"');
 
-                        foreach (var page in itemStructure)
+                        foreach (var page in bookStructure)
                         {
                             if (page.id == activeItemId)
                             {
@@ -851,6 +1045,7 @@ namespace TefTeleNote_WF
                             }
                         }
                     }
+                    this.tabSaved = true;
                 }
             }
         }
@@ -958,6 +1153,10 @@ namespace TefTeleNote_WF
                 Contents item = Library.collection[Library.idCollection.Count - 1];
                 TreeNode tren = new TreeNode(item.Name);
                 tren.Tag = item.Id;
+                if (item.Type == 2)
+                {
+                    tren.ForeColor = this.treeFolderNameColor;
+                }
                 treeview_docStruct.Nodes.Add(tren);
 
                 //foreach (var item in collection)
@@ -999,6 +1198,7 @@ namespace TefTeleNote_WF
         /// <param name="e"></param>
         private void btn_addFolder_Click(object sender, EventArgs e)
         {
+            if (this.activeLevel == 0) { this.activeLevel = 1; };
             if (!string.IsNullOrEmpty(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
             {
                 if (BookFile.IsValidFilename(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
@@ -1016,14 +1216,14 @@ namespace TefTeleNote_WF
                         if (fs != null)
                         {
                             ItemStructure its = new ItemStructure();
-                            its.order = this.itemStructure.Count;
+                            its.order = this.bookStructure.Count;
                             its.path = this.activeDirectory;
                             its.level = this.activeLevel;
                             its.type = 2;
                             its.name = this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.');
                             its.id = ID.Generate(32);
                             its.tabIndex = -1;
-                            this.itemStructure.Add(its);
+                            this.bookStructure.Add(its);
 
                             this.openedBook.folderCount++;
                             this.SaveBookManifest();
@@ -1053,6 +1253,7 @@ namespace TefTeleNote_WF
         /// <param name="e"></param>
         private void btn_addPage_Click(object sender, EventArgs e)
         {
+            if (this.activeLevel == 0) { this.activeLevel = 1; };
             if (!string.IsNullOrEmpty(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
             {
                 if (BookFile.IsValidFilename(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
@@ -1070,14 +1271,14 @@ namespace TefTeleNote_WF
                         if (fs != null)
                         {
                             ItemStructure its = new ItemStructure();
-                            its.order = this.itemStructure.Count;
+                            its.order = this.bookStructure.Count;
                             its.path = this.activeDirectory;
                             its.level = this.activeLevel;
                             its.type = 1;
                             its.name = this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.');
                             its.id = ID.Generate(32);
                             its.tabIndex = -1;
-                            this.itemStructure.Add(its);
+                            this.bookStructure.Add(its);
 
                             this.openedBook.pageCount++;
                             this.SaveBookManifest();
@@ -1112,7 +1313,7 @@ namespace TefTeleNote_WF
 
         private void SaveBookStruture()
         {
-            string structure = BooksFilesUtils.BuildBookStructure(this.itemStructure);
+            string structure = BooksFilesUtils.BuildBookStructure(this.bookStructure);
             File.WriteAllText(this.openedBook.structPath, structure);
         }
 
@@ -1127,22 +1328,16 @@ namespace TefTeleNote_WF
             TreeNode tren = new TreeNode("New");
             if (item.type == 1)
             {
-                string marger = string.Empty;
-                for (int i = 0; i < item.level; i++)
-                {
-                    marger += "- ";
-                }
-                tren = new TreeNode(marger + item.name);
 
+
+                tren = new TreeNode(item.name);
+                tren.Text = item.name;
             }
             else
             {
-                string marger = string.Empty;
-                for (int i = 0; i < item.level; i++)
-                {
-                    marger += "/ ";
-                }
-                tren = new TreeNode("/ " + marger + item.name);
+                tren = new TreeNode("/ " + item.name);
+                tren.Text = "/ " + item.name;
+                tren.ForeColor = this.treeFolderNameColor;
             }
                 tren.Tag = item.id;
                 treeview_docStruct.Nodes.Add(tren);

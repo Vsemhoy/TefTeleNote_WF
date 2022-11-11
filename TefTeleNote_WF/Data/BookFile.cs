@@ -55,6 +55,10 @@ namespace TefTeleNote_WF.Data
 
         public List<ItemStructure> structureList { get; set; }
         public List<Page> tabs { get; set; }
+        /// <summary>
+        /// Closed = 0; Opened  = 1; WriteMode  = 2;
+        /// </summary>
+        public int status { get; set; }
 
 
 
@@ -88,6 +92,7 @@ namespace TefTeleNote_WF.Data
 
             this.structureList = new List<ItemStructure>();
             this.tabs = new List<Page>();
+            this.status = 0;
         }
 
 
