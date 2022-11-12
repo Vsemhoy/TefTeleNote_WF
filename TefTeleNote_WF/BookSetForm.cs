@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -133,7 +134,15 @@ namespace TefTeleNote_WF
         {
 
             BookFile bf = new BookFile();
-            HtmlTemplates htmp = new HtmlTemplates("Russian");
+            foreach (var lan in Language.languageList)
+            {
+                if (this.combox_language.Text == lan.nativeName)
+                {
+                    bf.language = lan.code;
+                    break;
+                }
+            }
+            HtmlTemplates htmp = new HtmlTemplates(bf.language);
             bf.titleName = this.texbox_title.Text.Trim();
             bf.description = this.textbox_description.Text.Trim();
             bf.author = UserConfig.userName;
@@ -221,13 +230,11 @@ namespace TefTeleNote_WF
                 bf.manifestPath = manifestFile;
                 File.WriteAllText(manifestFile, BooksFilesUtils.BuildBookManifest(bf));
 
+                var structFile = Path.Combine(assdir, BookFile.structurename);
+                File.WriteAllText(structFile, BooksFilesUtils.BuildEmptyBookStructure(bf));
 
+                this.Close();
 
-
-
-                //File.WriteAllText(configPath, string.Empty);
-                //File.WriteAllText(configPath, result);
-                //return true;
             }
             catch (Exception eex)
             {

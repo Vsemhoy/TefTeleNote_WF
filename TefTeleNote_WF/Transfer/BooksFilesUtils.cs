@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using TefTeleNote_WF.Data;
+using static System.Net.Mime.MediaTypeNames;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace TefTeleNote_WF.Transfer
@@ -50,7 +51,7 @@ namespace TefTeleNote_WF.Transfer
 
                 foreach (System.IO.DirectoryInfo dirInfo in subDirs)
                 {
-                    for (int i = 0; i < 2; i++)
+                    if (dirInfo.Name[0] != '.')
                     {
 
                     Library.fileCollection.Add(LoadBookFromDirectory(dirInfo));
@@ -115,6 +116,9 @@ namespace TefTeleNote_WF.Transfer
                         case BookFile.stylename:
                             bf.stylePath = fi.FullName;
                             break;
+                        case BookFile.structurename:
+                            bf.structPath = fi.FullName;
+                            break;
                     }
                 }
                 if (!string.IsNullOrEmpty(bf.manifestPath))
@@ -164,6 +168,10 @@ namespace TefTeleNote_WF.Transfer
                             {
                                 bf.updated = Convert.ToDateTime(xmlNode.SelectSingleNode("updated").InnerText);
                             }
+                            if (xmlNode.SelectSingleNode("updator") != null)
+                            {
+                                bf.updator = xmlNode.SelectSingleNode("updator").InnerText;
+                            }
                             if (xmlNode.SelectSingleNode("lastopen") != null)
                             {
                                 bf.lastopen = Convert.ToDateTime(xmlNode.SelectSingleNode("lastopen").InnerText);
@@ -198,7 +206,44 @@ namespace TefTeleNote_WF.Transfer
                             MessageBox.Show(excep2.Message);
                         }
 
+                        try
+                        {
+                            if (xmlDocument.GetElementsByTagName("tab").Count > 0)
+                            {
+                                XmlNodeList xmlNdl = xmlDocument.GetElementsByTagName("tab");
+                                if (xmlNdl != null)
+                                {
+                                    foreach (XmlNode tab in xmlNdl)
+                                    {
+                                        Page newTab = new Page();
+                                        newTab.id = tab.SelectSingleNode("id").InnerText;
+                                        newTab.name = tab.SelectSingleNode("name").InnerText;
+                                        newTab.order = Convert.ToInt32( tab.SelectSingleNode("order").InnerText);
+                                        bf.tabs.Add(newTab);
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception excep2)
+                        {
+                            MessageBox.Show(excep2.Message);
+                        }
 
+                        try
+                        {
+                            if (xmlDocument.GetElementsByTagName("state").Count > 0)
+                            {
+                                xmlNode = xmlDocument.GetElementsByTagName("state").Item(0);
+                                if (xmlNode.SelectSingleNode("itemIdOfActiveTab") != null)
+                                {
+                                    bf.itemIdOfActiveTab = xmlNode.SelectSingleNode("itemIdOfActiveTab").InnerText;
+                                }
+                            }
+                        }
+                        catch (Exception excep2)
+                        {
+                            MessageBox.Show(excep2.Message);
+                        }
                     }
                     catch (Exception exp)
                     {
@@ -215,6 +260,75 @@ namespace TefTeleNote_WF.Transfer
             return null;
             
         }
+
+
+        public static List<ItemStructure> LoadBookStructure(DirectoryInfo dirInfo)
+        {
+            List<ItemStructure> itemStruct = new List<ItemStructure>();
+            try
+            {
+                System.IO.FileInfo[] files = null;
+                DirectoryInfo assetFolder = new DirectoryInfo(Path.Combine(dirInfo.FullName, BooksFilesUtils.assetFolder));
+                string path = Path.Combine(assetFolder.FullName, BookFile.structurename);
+            
+                string text = File.ReadAllText(path);
+                if (text != null)
+                {
+                    XmlDocument xmlDocument = new XmlDocument();
+                    xmlDocument.LoadXml(text);
+                    XmlNodeList xmlNodes;
+                    try
+                    {
+                        xmlNodes = xmlDocument.GetElementsByTagName("item");
+                        foreach (XmlNode xmlNode in xmlNodes)
+                        {
+                            ItemStructure its = new ItemStructure();
+                            if (xmlNode.SelectSingleNode("id") != null)
+                            {
+                                its.id = xmlNode.SelectSingleNode("id").InnerText;
+                            }
+                            if (xmlNode.SelectSingleNode("name") != null)
+                            {
+                                its.name = xmlNode.SelectSingleNode("name").InnerText;
+                            }
+                            if (xmlNode.SelectSingleNode("path") != null)
+                            {
+                                its.path = xmlNode.SelectSingleNode("path").InnerText;
+                            }
+                            if (xmlNode.SelectSingleNode("type") != null)
+                            {
+                                its.type = Convert.ToInt32(xmlNode.SelectSingleNode("type").InnerText);
+                            }
+                            if (xmlNode.SelectSingleNode("order") != null)
+                            {
+                                its.order = Convert.ToInt32(xmlNode.SelectSingleNode("order").InnerText);
+                            }
+                            if (xmlNode.SelectSingleNode("level") != null)
+                            {
+                                its.level = Convert.ToInt32(xmlNode.SelectSingleNode("level").InnerText);
+                            }
+                            if (xmlNode.SelectSingleNode("tabIndex") != null)
+                            {
+                                its.tabIndex = Convert.ToInt32(xmlNode.SelectSingleNode("tabIndex").InnerText);
+                            }
+                            itemStruct.Add(its);
+                        }
+                    }
+                    catch (Exception excep1)
+                    {
+                        MessageBox.Show(excep1.Message);
+                    }
+                    
+                }
+
+            }
+            catch (Exception excep1)
+            {
+                MessageBox.Show(excep1.Message);
+            }
+            return itemStruct;
+        }
+
 
         static void WalkDirectoryTree(System.IO.DirectoryInfo root)
         {
@@ -281,6 +395,9 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteStartElement("langCode");
             xmlWriter.WriteString(Convert.ToString(bf.language));
             xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("category");
+            xmlWriter.WriteString(Convert.ToString(bf.categoryName));
+            xmlWriter.WriteEndElement();
             xmlWriter.WriteEndElement();
 
             xmlWriter.WriteStartElement("info");
@@ -299,6 +416,9 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteStartElement("updated");
             xmlWriter.WriteString(bf.updated.ToString());
             xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("updator");
+            xmlWriter.WriteString(bf.updator);
+            xmlWriter.WriteEndElement();
             xmlWriter.WriteStartElement("lastopen");
             xmlWriter.WriteString(bf.lastopen.ToString());
             xmlWriter.WriteEndElement();
@@ -313,27 +433,21 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteEndElement();
             xmlWriter.WriteEndElement();
 
-            xmlWriter.WriteStartElement("structure");
-            xmlWriter.WriteStartElement("item");
-            xmlWriter.WriteStartElement("id");
-            xmlWriter.WriteString(Generators.ID.Generate(32));
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("type");
-            xmlWriter.WriteString("1");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("name");
-            xmlWriter.WriteString("blank");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("order");
-            xmlWriter.WriteString("1");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("level");
-            xmlWriter.WriteString("1");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteStartElement("tabIndex");
-            xmlWriter.WriteString("1");
-            xmlWriter.WriteEndElement();
-            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("openedTabs");
+            foreach (Page pg in bf.tabs)
+            {
+                xmlWriter.WriteStartElement("tab");
+                xmlWriter.WriteStartElement("id");
+                xmlWriter.WriteString(pg.id);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("name");
+                xmlWriter.WriteString(pg.name);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("order");
+                xmlWriter.WriteString(Convert.ToString(pg.order));
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteEndElement();
+            }
             xmlWriter.WriteEndElement();
 
             xmlWriter.WriteStartElement("statistics");
@@ -342,6 +456,51 @@ namespace TefTeleNote_WF.Transfer
             xmlWriter.WriteEndElement();
             xmlWriter.WriteStartElement("folders");
             xmlWriter.WriteString(Convert.ToString(bf.folderCount));
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteEndElement();
+
+            xmlWriter.WriteStartElement("state");
+            xmlWriter.WriteStartElement("itemIdOfActiveTab");
+            xmlWriter.WriteString(bf.itemIdOfActiveTab);
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteEndElement();
+
+            xmlWriter.WriteEndElement();
+            xmlWriter.Close();
+
+            return output.ToString();
+        }
+
+        public static string BuildEmptyBookStructure(BookFile bf)
+        {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.OmitXmlDeclaration = true;
+            StringBuilder output = new StringBuilder();
+            XmlWriter xmlWriter = XmlWriter.Create(output, settings);
+            xmlWriter.WriteStartElement("root");
+
+            xmlWriter.WriteStartElement("item");
+            xmlWriter.WriteStartElement("id");
+            xmlWriter.WriteString(Generators.ID.Generate(32));
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("name");
+            xmlWriter.WriteString("blank");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("type");
+            xmlWriter.WriteString("1");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("order");
+            xmlWriter.WriteString("1");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("level");
+            xmlWriter.WriteString("1");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("tabIndex");
+            xmlWriter.WriteString("0");
+            xmlWriter.WriteEndElement();
+            xmlWriter.WriteStartElement("path");
+            xmlWriter.WriteString("");
             xmlWriter.WriteEndElement();
             xmlWriter.WriteEndElement();
 
@@ -361,6 +520,49 @@ namespace TefTeleNote_WF.Transfer
                 }
             }
             return null;
+        }
+
+
+        public static string BuildBookStructure(List<ItemStructure> itsList)
+        {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.OmitXmlDeclaration = true;
+            StringBuilder output = new StringBuilder();
+            XmlWriter xmlWriter = XmlWriter.Create(output, settings);
+            xmlWriter.WriteStartElement("root");
+
+            foreach (var item in itsList)
+            {
+                xmlWriter.WriteStartElement("item");
+                xmlWriter.WriteStartElement("id");
+                xmlWriter.WriteString(item.id);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("name");
+                xmlWriter.WriteString(item.name);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("type");
+                xmlWriter.WriteString(item.type.ToString());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("order");
+                xmlWriter.WriteString(item.order.ToString());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("level");
+                xmlWriter.WriteString(item.level.ToString());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("tabIndex");
+                xmlWriter.WriteString(item.tabIndex.ToString());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteStartElement("path");
+                xmlWriter.WriteString(item.path);
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteEndElement();
+            }
+
+            xmlWriter.WriteEndElement();
+            xmlWriter.Close();
+
+            return output.ToString();
         }
     }
 }
