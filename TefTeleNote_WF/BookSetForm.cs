@@ -22,11 +22,10 @@ namespace TefTeleNote_WF
         string selectedIcon;
         string selectdCover;
         string selectdSuper;
-
-        public BookSetForm(bool isEdit = false)
+        string root = UserConfig.folderShelf;
+        public BookSetForm()
         {
             InitializeComponent();
-            this.editMode = isEdit;
 
             this.combox_language.Items.Clear();
             int lanIndex = 0;
@@ -44,6 +43,58 @@ namespace TefTeleNote_WF
             {
                 combox_language.SelectedIndex = lanIndex;
             }
+        }
+
+        public BookSetForm(BookFile book)
+        {
+            this.editMode = true;
+            InitializeComponent();
+            this.combox_language.Items.Clear();
+            int lanIndex = 0;
+            int counter = 0;
+            foreach (var lan in Language.languageList)
+            {
+                combox_language.Items.Add(lan.nativeName);
+                if (book.language == lan.code)
+                {
+                    lanIndex = counter;
+                }
+                counter++;
+            }
+            if (combox_language.Items.Count > 0)
+            {
+                combox_language.SelectedIndex = lanIndex;
+            }
+
+            texbox_title.Text = book.titleName;
+            if (File.Exists(book.stylePath))
+            {
+                textbox_css.Text = File.ReadAllText(book.stylePath);
+            }
+            textbox_description.Text = book.description;
+            textBox_metaDescription.Text = book.meta_descr;
+            textBox_metaKeywords.Text = book.meta_keys;
+            textBox_metaTitle.Text = book.meta_title;
+            combox_categories.Items.Add(book.categoryName);
+
+            if (File.Exists(Path.Combine(book.iconPath)))
+            {
+                pictureBox_icon.Image = Image.FromFile(Path.Combine(book.iconPath));
+                this.selectedIcon = Path.GetFileName(book.iconPath);
+            }
+            if (File.Exists(Path.Combine(book.coverPath)))
+            {
+                pictureBox_cover.Image = Image.FromFile(Path.Combine(book.coverPath));
+                this.selectdCover = Path.GetFileName(book.coverPath);
+            }
+            if (File.Exists(Path.Combine(book.superCoverPath)))
+            {
+                pictureBox_super.Image = Image.FromFile(Path.Combine(book.superCoverPath));
+                this.selectdSuper = Path.GetFileName(book.superCoverPath);
+
+            }
+            this.btn_createBook.Text = "Update book";
+
         }
 
         private void BookSetForm_Load(object sender, EventArgs e)
@@ -132,119 +183,122 @@ namespace TefTeleNote_WF
 
         private void btn_createBook_Click(object sender, EventArgs e)
         {
-
-            BookFile bf = new BookFile();
-            foreach (var lan in Language.languageList)
+            if (this.editMode == false)
             {
-                if (this.combox_language.Text == lan.nativeName)
+                BookFile bf = new BookFile();
+                foreach (var lan in Language.languageList)
                 {
-                    bf.language = lan.code;
-                    break;
+                    if (this.combox_language.Text == lan.nativeName)
+                    {
+                        bf.language = lan.code;
+                        break;
+                    }
                 }
+                HtmlTemplates htmp = new HtmlTemplates(bf.language);
+                bf.titleName = this.texbox_title.Text.Trim();
+                bf.description = this.textbox_description.Text.Trim();
+                bf.author = UserConfig.userName;
+                bf.categoryName = this.combox_categories.Text.Trim();
+                bf.meta_descr = this.textBox_metaDescription.Text.Trim();
+                bf.meta_keys = this.textBox_metaKeywords.Text.Trim();
+                bf.meta_title = this.textBox_metaTitle.Text.Trim();
+
+
+                string style = SanitizeStyle( this.textbox_css.Text);
+                if (bf.titleName.Length < 3)
+                {
+                    MessageBox.Show("Name is too short");
+                }
+                // Try to create folder
+                try
+                {
+                    var newDir = Path.Combine(UserConfig.folderShelf, bf.titleName);
+                    bool exists = Directory.Exists(newDir);
+
+                    if (!exists)
+                    {
+                        Directory.CreateDirectory(newDir);
+                        UserConfig.OpenFileSequrity(newDir);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Directory also exists!");
+                        return;
+                    }
+                    // Okay, try to create assets folder and create new files
+                    Directory.CreateDirectory(Path.Combine(newDir, BookFile.fileFolderName));
+                    UserConfig.OpenFileSequrity(Path.Combine(newDir, BookFile.fileFolderName));
+
+                    var blankFile = Path.Combine(newDir, BookFile.defaultFileName);
+                    File.WriteAllText(blankFile, htmp.GetBlankContent());
+
+                    var assdir = Path.Combine(newDir, ".assets");
+                    Directory.CreateDirectory(assdir);
+                    UserConfig.OpenFileSequrity(assdir);
+
+                    // Transfer image files
+                    if (!string.IsNullOrEmpty(selectedIcon))
+                    {
+                        string name = Path.GetFileName(selectedIcon);
+                        string ext = name.Split('.')[name.Split('.').Length - 1];
+                        string newName = BookFile.iconname + "." + ext;
+                        newName = Path.Combine(assdir, newName);
+                        System.IO.File.Copy(selectedIcon, newName, true);
+                        selectedIcon = newName;
+                    }
+                    if (!string.IsNullOrEmpty(selectdCover))
+                    {
+                        string name = Path.GetFileName(selectdCover);
+                        string ext = name.Split('.')[name.Split('.').Length - 1];
+                        string newName = BookFile.covername + "." + ext;
+                        newName = Path.Combine(assdir, newName);
+                        System.IO.File.Copy(selectdCover, newName, true);
+                        selectdCover = newName;
+                    }
+                    if (!string.IsNullOrEmpty(selectdSuper))
+                    {
+                        string name = Path.GetFileName(selectdSuper);
+                        string ext = name.Split('.')[name.Split('.').Length - 1];
+                        string newName = BookFile.supercovername + "." + ext;
+                        newName = Path.Combine(assdir, newName);
+                        System.IO.File.Copy(selectdSuper, newName, true);
+                        selectdSuper = newName;
+                    }
+
+                    bf.iconPath = selectedIcon;
+                    bf.coverPath = selectdCover;
+                    bf.superCoverPath = selectdSuper;
+
+
+                    var styleFile = Path.Combine(assdir, BookFile.stylename);
+                    File.WriteAllText(styleFile, style);
+                    bf.stylePath = styleFile;
+
+                    var templateFile = Path.Combine(assdir, BookFile.templatename);
+                    File.WriteAllText(templateFile, htmp.GetHtmlTemplate());
+                    bf.templatPath = templateFile;
+
+                    var manifestFile = Path.Combine(assdir, BookFile.manifestname);
+                    bf.manifestPath = manifestFile;
+                    File.WriteAllText(manifestFile, BooksFilesUtils.BuildBookManifest(bf));
+
+                    var structFile = Path.Combine(assdir, BookFile.structurename);
+                    File.WriteAllText(structFile, BooksFilesUtils.BuildEmptyBookStructure(bf));
+
+                    this.Close();
+
+                }
+                catch (Exception eex)
+                {
+                    MessageBox.Show("Cannot create directory with that name", eex.Message);
+                }
+
+
+
+                bf.description = this.textbox_description.Text;
+                bf.author = UserConfig.userName;
+
             }
-            HtmlTemplates htmp = new HtmlTemplates(bf.language);
-            bf.titleName = this.texbox_title.Text.Trim();
-            bf.description = this.textbox_description.Text.Trim();
-            bf.author = UserConfig.userName;
-            bf.categoryName = this.combox_categories.Text.Trim();
-            bf.meta_descr = this.textBox_metaDescription.Text.Trim();
-            bf.meta_keys = this.textBox_metaKeywords.Text.Trim();
-            bf.meta_title = this.textBox_metaTitle.Text.Trim();
-
-
-            string style = SanitizeStyle( this.textbox_css.Text);
-            if (bf.titleName.Length < 3)
-            {
-                MessageBox.Show("Name is too short");
-            }
-            // Try to create folder
-            try
-            {
-                var newDir = Path.Combine(UserConfig.folderShelf, bf.titleName);
-                bool exists = Directory.Exists(newDir);
-
-                if (!exists)
-                {
-                    Directory.CreateDirectory(newDir);
-                    UserConfig.OpenFileSequrity(newDir);
-                }
-                else
-                {
-                    MessageBox.Show("Directory also exists!");
-                    return;
-                }
-                // Okay, try to create assets folder and create new files
-                Directory.CreateDirectory(Path.Combine(newDir, BookFile.fileFolderName));
-                UserConfig.OpenFileSequrity(Path.Combine(newDir, BookFile.fileFolderName));
-
-                var blankFile = Path.Combine(newDir, BookFile.defaultFileName);
-                File.WriteAllText(blankFile, htmp.GetBlankContent());
-
-                var assdir = Path.Combine(newDir, ".assets");
-                Directory.CreateDirectory(assdir);
-                UserConfig.OpenFileSequrity(assdir);
-
-                // Transfer image files
-                if (!string.IsNullOrEmpty(selectedIcon))
-                {
-                    string name = Path.GetFileName(selectedIcon);
-                    string ext = name.Split('.')[name.Split('.').Length - 1];
-                    string newName = BookFile.iconname + "." + ext;
-                    newName = Path.Combine(assdir, newName);
-                    System.IO.File.Copy(selectedIcon, newName, true);
-                    selectedIcon = newName;
-                }
-                if (!string.IsNullOrEmpty(selectdCover))
-                {
-                    string name = Path.GetFileName(selectdCover);
-                    string ext = name.Split('.')[name.Split('.').Length - 1];
-                    string newName = BookFile.covername + "." + ext;
-                    newName = Path.Combine(assdir, newName);
-                    System.IO.File.Copy(selectdCover, newName, true);
-                    selectdCover = newName;
-                }
-                if (!string.IsNullOrEmpty(selectdSuper))
-                {
-                    string name = Path.GetFileName(selectdSuper);
-                    string ext = name.Split('.')[name.Split('.').Length - 1];
-                    string newName = BookFile.supercovername + "." + ext;
-                    newName = Path.Combine(assdir, newName);
-                    System.IO.File.Copy(selectdSuper, newName, true);
-                    selectdSuper = newName;
-                }
-
-                bf.iconPath = selectedIcon;
-                bf.coverPath = selectdCover;
-                bf.superCoverPath = selectdSuper;
-
-
-                var styleFile = Path.Combine(assdir, BookFile.stylename);
-                File.WriteAllText(styleFile, style);
-                bf.stylePath = styleFile;
-
-                var templateFile = Path.Combine(assdir, BookFile.templatename);
-                File.WriteAllText(templateFile, htmp.GetHtmlTemplate());
-                bf.templatPath = templateFile;
-
-                var manifestFile = Path.Combine(assdir, BookFile.manifestname);
-                bf.manifestPath = manifestFile;
-                File.WriteAllText(manifestFile, BooksFilesUtils.BuildBookManifest(bf));
-
-                var structFile = Path.Combine(assdir, BookFile.structurename);
-                File.WriteAllText(structFile, BooksFilesUtils.BuildEmptyBookStructure(bf));
-
-                this.Close();
-
-            }
-            catch (Exception eex)
-            {
-                MessageBox.Show("Cannot create directory with that name", eex.Message);
-            }
-
-
-
-            bf.description = this.textbox_description.Text;
-            bf.author = UserConfig.userName;
             
         }
 

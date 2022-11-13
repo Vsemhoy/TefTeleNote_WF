@@ -52,12 +52,14 @@ namespace TefTeleNote_WF.Data
             List<ItemStructure> newStruct = new List<ItemStructure>();
             int torder = sourcePage.order;
             int order = 0;
+            bool added = false;
             foreach (ItemStructure istru in bookStructure)
             {
                 if (torder == order)
                 {
                     newStruct.Add(sourcePage);
                     order++;
+                    added = true;
                 }
                 if (istru.id != sourcePage.id)
                 {
@@ -65,6 +67,10 @@ namespace TefTeleNote_WF.Data
                     newStruct.Add(istru);
                     order++;
                 }
+            }
+            if (added == false)
+            {
+                newStruct.Add(sourcePage);
             }
             return newStruct;
         }

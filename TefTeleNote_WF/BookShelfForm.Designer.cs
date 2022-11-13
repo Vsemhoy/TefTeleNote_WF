@@ -188,18 +188,21 @@
             this.createBookToolStripMenuItem.Name = "createBookToolStripMenuItem";
             this.createBookToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.createBookToolStripMenuItem.Text = "Create book";
+            this.createBookToolStripMenuItem.Click += new System.EventHandler(this.createBookToolStripMenuItem_Click);
             // 
             // importBookToolStripMenuItem
             // 
             this.importBookToolStripMenuItem.Name = "importBookToolStripMenuItem";
             this.importBookToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.importBookToolStripMenuItem.Text = "Import Book";
+            this.importBookToolStripMenuItem.Click += new System.EventHandler(this.importBookToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
+            this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
@@ -209,11 +212,10 @@
             // 
             // panel_bookDescription
             // 
-            this.panel_bookDescription.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.panel_bookDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel_bookDescription.Location = new System.Drawing.Point(492, 74);
+            this.panel_bookDescription.BackColor = System.Drawing.Color.Gainsboro;
+            this.panel_bookDescription.Location = new System.Drawing.Point(492, 66);
             this.panel_bookDescription.Name = "panel_bookDescription";
-            this.panel_bookDescription.Size = new System.Drawing.Size(328, 588);
+            this.panel_bookDescription.Size = new System.Drawing.Size(335, 604);
             this.panel_bookDescription.TabIndex = 6;
             // 
             // BookShelfForm
@@ -227,7 +229,7 @@
             this.Controls.Add(this.panel_bookList);
             this.Controls.Add(this.mainMenu_strip);
             this.MainMenuStrip = this.Filter_Menu_strip;
-            this.MinimumSize = new System.Drawing.Size(600, 0);
+            this.MinimumSize = new System.Drawing.Size(500, 0);
             this.Name = "BookShelfForm";
             this.Text = "BookForm";
             this.panel_bookList.ResumeLayout(false);

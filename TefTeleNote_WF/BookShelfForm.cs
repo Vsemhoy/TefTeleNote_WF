@@ -26,13 +26,19 @@ namespace TefTeleNote_WF
         private int cardPadding;
         private int cardInfoSectionWidth;
 
+        private string contextSelectedId;
+
+        private BookFile bookToEdit;
+
         private Color editedItemColor = Color.CornflowerBlue;
         private Color editedItemForeColor = Color.White;
 
         public List<BookViewForm> viewCollection;
+        private ContextMenuStrip contextMenuItem;
         public BookShelfForm()
         {
             InitializeComponent();
+            this.contextMenuItem = new ContextMenuStrip();
            //panel2.MouseHover += Panel2_MouseHover;
             //panel2.MouseLeave += Panel2_MouseLeave;
             panel_bookList.MouseEnter += Panel2_MouseLeave;
@@ -83,6 +89,7 @@ namespace TefTeleNote_WF
         {
             // Load data
             BookFile bkf = BooksFilesUtils.GetBookById(id);
+            this.bookToEdit = bkf;
             int totalHeight = 0;
             if (bkf != null)
             {
@@ -127,11 +134,33 @@ namespace TefTeleNote_WF
                     Label descr = new Label();
                     descr.Text = bkf.description;
                     descr.Location = new Point(this.itemPadding * 6, totalHeight + this.itemPadding * 6);
-                    descr.Height = 300;
+                    descr.Height = 100;
                     //descr.Font = new Font("Serif", 14);
                     descr.Width = width - this.itemPadding * 6;
                     this.panel_bookDescription.Controls.Add(descr);
+                    totalHeight += this.itemPadding + descr.Height;
                 }
+
+                Label editBook = new Label();
+                editBook.Text = "Edit book";
+                editBook.Location = new Point(this.itemPadding * 6, totalHeight + this.itemPadding * 3);
+                editBook.Width = width - this.itemPadding * 6;
+                editBook.Height = 30;
+                editBook.Cursor = Cursors.Hand;
+                editBook.Click += EditBook_Click;
+                editBook.ForeColor = Color.CornflowerBlue ;
+                this.panel_bookDescription.Controls.Add(editBook);
+            }
+        }
+
+        private void EditBook_Click(object? sender, EventArgs e)
+        {
+            if (this.bookToEdit != null)
+            {
+                Form setform = new BookSetForm(this.bookToEdit);
+                setform.ShowDialog();
+                BooksFilesUtils.LoadBooks();
+                this.ReloadBookListInRows();
             }
         }
 
@@ -194,31 +223,31 @@ namespace TefTeleNote_WF
                 nextPositionY += this.itemPadding + this.itemHeight;
 
                 panel.MouseEnter += this.MouseHoverItemRow;
-                
 
-                //if (!string.IsNullOrEmpty(item.coverPath))
-                //{
-                //    int pixPad = this.cardPadding;
-                //    PictureBox pictureBox = new PictureBox();
-                //    pictureBox.ImageLocation = item.coverPath;
-                //    pictureBox.Name = "pix_" + item.id;
-                //    pictureBox.Width = this.itemHeight - pixPad * 2;
-                //    pictureBox.Height = this.itemHeight - pixPad * 2;
-                //    pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
-                //    pictureBox.Location = new Point(pixPad, pixPad);
-                //    picOffset = this.itemHeight;
-                //    panel.Controls.Add(pictureBox);
-                //}
+
+                if (!string.IsNullOrEmpty(item.iconPath))
+                {
+                    int pixPad = this.cardPadding;
+                    PictureBox pictureBox = new PictureBox();
+                    pictureBox.ImageLocation = item.iconPath;
+                    pictureBox.Name = "pix_" + item.id;
+                    pictureBox.Width = this.itemHeight - pixPad * 2;
+                    pictureBox.Height = this.itemHeight - pixPad * 2;
+                    pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+                    pictureBox.Location = new Point(pixPad, pixPad);
+                    picOffset = this.itemHeight;
+                    panel.Controls.Add(pictureBox);
+                }
 
                 Label name  = new Label();
                 name.Text = item.titleName;
                 name.AutoSize = false;
                 name.Font = new Font("Serif", 12);
-                name.Width = this.itemWidth - this.cardInfoSectionWidth - this.cardPadding * 2;
-                name.Location = new Point(8, 8);
+                name.Width = this.itemWidth - this.cardInfoSectionWidth - this.cardPadding * 2 - picOffset;
+                name.Location = new Point(8 + picOffset, 8);
                 name.Height = this.itemHeight - cardPadding * 4;
                 name.Cursor = Cursors.Hand;
-                name.Click += Name_Click;
+                name.MouseClick += Name_MouseClick;
                 name.DoubleClick += Name_DoubleClick;
                 name.Tag = item.id;
                 panel.Controls.Add(name);
@@ -241,6 +270,88 @@ namespace TefTeleNote_WF
                 this.panel_bookList.Controls.Add(panel);
             }
 
+        }
+
+        private void Name_MouseClick(object? sender, MouseEventArgs e)
+        {
+            Label lab = sender as Label;
+
+            if (lab != null)
+            {
+                string id = lab.Tag.ToString();
+                this.contextSelectedId = id;
+                BookFile bf = BooksFilesUtils.GetBookById(id);
+                if (e.Button == MouseButtons.Left)
+                {
+                    if (bf.status > 0)
+                    {
+                        foreach (BookViewForm bvf in this.viewCollection)
+                        {
+                            if (bvf.Tag == id)
+                            {
+                                bvf.Visible = false;
+                                bvf.Visible = true;
+                                bvf.WindowState = FormWindowState.Normal;
+                                return;
+                            }
+                        }
+                    }
+
+                    bf.status = 2;
+                    var view = new BookViewForm(bf);
+                    view.Text = bf.titleName;
+                    view.Tag = id;
+                    view.Visible = true;
+                    view.WindowState = FormWindowState.Normal;
+                    view.FormClosed += View_FormClosed;
+                    this.viewCollection.Add(view);
+
+                    foreach (Panel pan in this.panel_bookList.Controls)
+                    {
+                        if (pan != null)
+                        {
+                            if (pan.Tag == id)
+                            {
+                                pan.BackColor = this.editedItemColor;
+                                pan.ForeColor = this.editedItemForeColor;
+                                break;
+                            }
+                        }
+                    }
+                     var a = 1;
+                }
+                else
+                {
+                    this.bookToEdit = bf;
+                    this.contextMenuItem.Items.Clear();
+                    Point loc = e.Location;
+                    ToolStripMenuItem tsmi = new ToolStripMenuItem();
+                    tsmi.Text = "Edit book";
+                    tsmi.Tag = id;
+                    tsmi.Click += Tsmi_Click;
+                    this.contextMenuItem.Items.Add(tsmi);
+
+                    this.contextMenuItem.Show((Control)sender, loc);
+                }
+            }
+        }
+
+        private void Tsmi_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (this.bookToEdit != null)
+                {
+                    Form setform = new BookSetForm(this.bookToEdit);
+                    setform.ShowDialog();
+                    BooksFilesUtils.LoadBooks();
+                    this.ReloadBookListInRows();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void Name_DoubleClick(object? sender, EventArgs e)
@@ -299,52 +410,7 @@ namespace TefTeleNote_WF
             }
         }
 
-        private void Name_Click(object? sender, EventArgs e)
-        {
-            Label lab = sender as Label;
-            if (lab != null)
-            {
-                string id = lab.Tag.ToString();
-
-                BookFile bf = BooksFilesUtils.GetBookById(id);
-
-                if (bf.status > 0)
-                {
-                    foreach (BookViewForm bvf in this.viewCollection)
-                    {
-                        if (bvf.Tag == id)
-                        {
-                            bvf.Visible = false;
-                            bvf.Visible = true;
-                            bvf.WindowState = FormWindowState.Normal;
-                            return;
-                        }
-                    }
-                }
-
-                bf.status = 2;
-                var view = new BookViewForm(bf);
-                view.Text = bf.titleName;
-                view.Tag = id;
-                view.Visible = true;
-                view.WindowState = FormWindowState.Normal;
-                view.FormClosed += View_FormClosed;
-                this.viewCollection.Add(view);
-
-                foreach (Panel pan in this.panel_bookList.Controls)
-                {
-                    if (pan != null)
-                    {
-                        if (pan.Tag == id)
-                        {
-                            pan.BackColor = this.editedItemColor;
-                            pan.ForeColor = this.editedItemForeColor;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+ 
 
         private void btn_newBook_Click(object sender, EventArgs e)
         {
@@ -352,15 +418,13 @@ namespace TefTeleNote_WF
 
         }
 
-        private void createBookToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Form setform = new BookSetForm();
-            setform.ShowDialog();
-            BooksFilesUtils.LoadBooks();
-            this.ReloadBookListInRows();
-        }
 
-        private void importBookToolStripMenuItem_Click(object sender, EventArgs e)
+
+
+
+
+
+        private void panel_bookList_Paint(object sender, PaintEventArgs e)
         {
 
         }
@@ -371,9 +435,17 @@ namespace TefTeleNote_WF
             settings.ShowDialog();
         }
 
-        private void panel_bookList_Paint(object sender, PaintEventArgs e)
+        private void importBookToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void createBookToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Form setform = new BookSetForm();
+            setform.ShowDialog();
+            BooksFilesUtils.LoadBooks();
+            this.ReloadBookListInRows();
         }
     }
 }

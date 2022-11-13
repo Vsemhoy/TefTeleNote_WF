@@ -38,7 +38,11 @@
             this.btn_tool_code = new System.Windows.Forms.ToolStripMenuItem();
             this.btn_tool_clearFormat = new System.Windows.Forms.ToolStripMenuItem();
             this.btn_tool_highlight = new System.Windows.Forms.ToolStripMenuItem();
-            this.btn_tool_insertAnchor = new System.Windows.Forms.ToolStripMenuItem();
+            this.colorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem_insert = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolBtn_insertHref = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolBtn_insertRofToPage = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolBtn_insertImage = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl_browser = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -65,6 +69,8 @@
             this.tool_savePage = new System.Windows.Forms.ToolStripMenuItem();
             this.tool_saveBook = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip_treeNode = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItem_tools = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem_replaceText = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip_main.SuspendLayout();
             this.tabControl_browser.SuspendLayout();
             this.panel_bookNavigation.SuspendLayout();
@@ -94,7 +100,8 @@
             this.btn_tool_code,
             this.btn_tool_clearFormat,
             this.btn_tool_highlight,
-            this.btn_tool_insertAnchor});
+            this.toolStripMenuItem_insert,
+            this.toolStripMenuItem_tools});
             this.menuStrip_main.Location = new System.Drawing.Point(0, 32);
             this.menuStrip_main.Name = "menuStrip_main";
             this.menuStrip_main.Size = new System.Drawing.Size(798, 30);
@@ -145,17 +152,47 @@
             // 
             // btn_tool_highlight
             // 
+            this.btn_tool_highlight.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.colorToolStripMenuItem});
             this.btn_tool_highlight.Name = "btn_tool_highlight";
-            this.btn_tool_highlight.Size = new System.Drawing.Size(69, 26);
-            this.btn_tool_highlight.Text = "Highlight";
+            this.btn_tool_highlight.Size = new System.Drawing.Size(34, 26);
+            this.btn_tool_highlight.Text = "HL";
             this.btn_tool_highlight.Click += new System.EventHandler(this.btn_tool_highlight_Click);
             // 
-            // btn_tool_insertAnchor
+            // colorToolStripMenuItem
             // 
-            this.btn_tool_insertAnchor.Name = "btn_tool_insertAnchor";
-            this.btn_tool_insertAnchor.Size = new System.Drawing.Size(25, 26);
-            this.btn_tool_insertAnchor.Text = "a";
-            this.btn_tool_insertAnchor.Click += new System.EventHandler(this.btn_tool_insertAnchor_Click);
+            this.colorToolStripMenuItem.Name = "colorToolStripMenuItem";
+            this.colorToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.colorToolStripMenuItem.Text = "Color";
+            // 
+            // toolStripMenuItem_insert
+            // 
+            this.toolStripMenuItem_insert.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolBtn_insertHref,
+            this.toolBtn_insertRofToPage,
+            this.toolBtn_insertImage});
+            this.toolStripMenuItem_insert.Name = "toolStripMenuItem_insert";
+            this.toolStripMenuItem_insert.Size = new System.Drawing.Size(55, 26);
+            this.toolStripMenuItem_insert.Text = "INSERT";
+            // 
+            // toolBtn_insertHref
+            // 
+            this.toolBtn_insertHref.Name = "toolBtn_insertHref";
+            this.toolBtn_insertHref.Size = new System.Drawing.Size(180, 22);
+            this.toolBtn_insertHref.Text = "External Reference";
+            // 
+            // toolBtn_insertRofToPage
+            // 
+            this.toolBtn_insertRofToPage.Name = "toolBtn_insertRofToPage";
+            this.toolBtn_insertRofToPage.Size = new System.Drawing.Size(180, 22);
+            this.toolBtn_insertRofToPage.Text = "Page Reference";
+            this.toolBtn_insertRofToPage.Click += new System.EventHandler(this.toolBtn_insertRofToPage_Click);
+            // 
+            // toolBtn_insertImage
+            // 
+            this.toolBtn_insertImage.Name = "toolBtn_insertImage";
+            this.toolBtn_insertImage.Size = new System.Drawing.Size(180, 22);
+            this.toolBtn_insertImage.Text = "Load insert image";
             // 
             // tabControl_browser
             // 
@@ -389,7 +426,6 @@
             // 
             this.treeview_docStruct.AllowDrop = true;
             this.treeview_docStruct.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.treeview_docStruct.CheckBoxes = false;
             this.treeview_docStruct.ItemHeight = 20;
             this.treeview_docStruct.Location = new System.Drawing.Point(1, 40);
             this.treeview_docStruct.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
@@ -441,6 +477,21 @@
             // 
             this.contextMenuStrip_treeNode.Name = "contextMenuStrip_treeNode";
             this.contextMenuStrip_treeNode.Size = new System.Drawing.Size(61, 4);
+            // 
+            // toolStripMenuItem_tools
+            // 
+            this.toolStripMenuItem_tools.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem_replaceText});
+            this.toolStripMenuItem_tools.Name = "toolStripMenuItem_tools";
+            this.toolStripMenuItem_tools.Size = new System.Drawing.Size(54, 26);
+            this.toolStripMenuItem_tools.Text = "TOOLS";
+            // 
+            // toolStripMenuItem_replaceText
+            // 
+            this.toolStripMenuItem_replaceText.Name = "toolStripMenuItem_replaceText";
+            this.toolStripMenuItem_replaceText.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem_replaceText.Text = "Replace text";
+            this.toolStripMenuItem_replaceText.Click += new System.EventHandler(this.toolStripMenuItem_replaceText_Click);
             // 
             // BookViewForm
             // 
@@ -512,7 +563,13 @@
         private ToolStripMenuItem btn_tool_code;
         private ToolStripMenuItem btn_tool_clearFormat;
         private ToolStripMenuItem btn_tool_highlight;
-        private ToolStripMenuItem btn_tool_insertAnchor;
         private ContextMenuStrip contextMenuStrip_treeNode;
+        private ToolStripMenuItem colorToolStripMenuItem;
+        private ToolStripMenuItem toolStripMenuItem_insert;
+        private ToolStripMenuItem toolBtn_insertHref;
+        private ToolStripMenuItem toolBtn_insertRofToPage;
+        private ToolStripMenuItem toolBtn_insertImage;
+        private ToolStripMenuItem toolStripMenuItem_tools;
+        private ToolStripMenuItem toolStripMenuItem_replaceText;
     }
 }

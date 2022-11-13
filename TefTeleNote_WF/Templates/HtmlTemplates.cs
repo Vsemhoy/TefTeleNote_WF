@@ -78,7 +78,8 @@ namespace TefTeleNote_WF.Templates
             }
             /// correct base style
             style = "\r\n   body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;}" +
-                "\r\n   #bookerContent:focus { outline: none; padding-bottom: 50vh;}" + style;
+                "\r\n   #bookerContent:focus { outline: none; padding-bottom: 50vh;}" +
+            "\r\n   #bookerContent pre { background: #00365c;color: white;font-size: 0.9rem;line-height: 1.2rem; padding: 6px; overflow: auto;}" + style;
         string contentedit = string.Empty;
             if (contenteditable)
             {
