@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Metrics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime;
 using System.Runtime.CompilerServices;
@@ -222,6 +224,7 @@ namespace TefTeleNote_WF
                         tp.Tag = item.id;
                         tp.Text = item.name;
                         tp.DoubleClick += Tp_DoubleClick;
+                        tp.MouseClick += Tp_MouseClick;
                         tp.Click += Tp_Click;
 
 
@@ -292,6 +295,51 @@ namespace TefTeleNote_WF
             }
         }
 
+        private void Tp_MouseClick(object? sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Middle)
+            {
+                selectedTab = tabControl_browser.SelectedTab;
+                string id = (string)selectedTab.Tag;
+                if (id != null)
+                {
+                    int index = tabControl_browser.SelectedIndex;
+                    tabControl_browser.TabPages.Remove(selectedTab);
+                    int counter = 0;
+                    foreach (var item in this.bookStructure)
+                    {
+                        if (item.id == id)
+                        {
+                            item.tabIndex = -1;
+                        }
+                        else
+                        {
+                            item.order = counter;
+                            counter++;
+                        }
+                    }
+                    int itemToRemoveIndex = -1;
+                    for (int i = 0; i < tabList.Count; i++)
+                    {
+                        if (tabList[i].id == id)
+                        {
+                            itemToRemoveIndex = i;
+                        }
+                        if (itemToRemoveIndex != -1)
+                        {
+                            tabList[i].order = tabList[i].order - 1;
+                        }
+                    }
+                    if (itemToRemoveIndex > -1)
+                    {
+                        tabList.RemoveAt(itemToRemoveIndex);
+                    }
+                }
+                this.RemoveFromTabList(id);
+                this.UpdateTabList();
+               // this.UpdateTreeItemState();
+            }
+        }
 
         private void Wv_KeyPress(object? sender, KeyPressEventArgs e)
         {
@@ -458,8 +506,10 @@ namespace TefTeleNote_WF
                     {
                         tabList.RemoveAt(itemToRemoveIndex);
                     }
-                }
+                    this.RemoveFromTabList(id);
                 this.UpdateTabList();
+               //this.UpdateTreeItemState();
+                }
             }
         }
 
@@ -856,9 +906,40 @@ namespace TefTeleNote_WF
                             }
                             else if (sourcePage.type == 2)
                             {
-                                // Move folder to page level and reorder
-                                return;
-                                /// too hard
+                                //Move folder to page level and reorder
+                                bool ou = Directory.Exists(Path.Combine(this.root, targetPage.path, sourcePage.name));
+                                //
+                                if (ou)
+                                {
+                                    // Just reorder!
+                                    int newLevel = targetPage.level;
+                                    if (sourcePage.level != targetPage.level)
+                                    {
+                                        return;
+                                    }
+                                    sourcePage.order = targetPage.order + 1;
+
+                                    this.bookStructure = ItemStructure.Reorder(this.bookStructure, sourcePage);
+                                }
+                                else
+                                {
+                                    string sourceFolder = Path.Combine(this.root, sourcePage.path, sourcePage.name);
+                                    if (Directory.GetFiles(sourceFolder).Length > 0)
+                                    {
+                                        MessageBox.Show("Move or remove all Pages before move directory.", "Directory not empty!");
+                                        return;
+                                    }
+                                    int newLevel = targetPage.level;
+                                    Directory.Move(sourceFolder, Path.Combine(this.root, targetPage.path, sourcePage.name));
+
+                                    sourcePage.path = targetPage.path;
+                                    sourcePage.level = newLevel;
+                                    sourcePage.order = targetPage.order + 1;
+
+                                    this.bookStructure = ItemStructure.Reorder(this.bookStructure, sourcePage);
+
+                                }
+                                
                             }
                         }
                         else  if (targetPage.type == 2)
@@ -888,9 +969,38 @@ namespace TefTeleNote_WF
                             else if (sourcePage.type == 2)
                             {
                                 // Move folder to folder level and reorder
-                                if (targetPage.level < 2) { return; }
-                                return;
+                                if (targetPage.level < 1) { return; }
+                                //Move folder to page level and reorder
+                                bool ou = Directory.Exists(Path.Combine(this.root, targetPage.path, targetPage.name, sourcePage.name));
+                                if (ou)
+                                {
+                                    // Just reorder!
+                                    sourcePage.order = targetPage.order + 1;
 
+                                    this.bookStructure = ItemStructure.Reorder(this.bookStructure, sourcePage);
+                                }
+                                else
+                                {
+                                    // Check if directory empty
+                                    string sourceFolder = Path.Combine(this.root, sourcePage.path, sourcePage.name);
+                                    if (Directory.GetFiles(sourceFolder).Length > 0)
+                                    {
+                                        MessageBox.Show("Move or remove all Pages before move directory.", "Directory not empty!");
+                                        return;
+                                    }
+
+                                    // Move Directory to Page level and reorder
+                                    int newLevel = targetPage.level + 1;
+                                    string targetFolder = Path.Combine(targetPage.path, targetPage.name);
+                                    Directory.Move(sourceFolder, Path.Combine(this.root, targetFolder, sourcePage.name));
+
+                                    sourcePage.path = targetFolder;
+                                    sourcePage.level = newLevel;
+                                    sourcePage.order = targetPage.order + 1;
+
+                                    this.bookStructure = ItemStructure.Reorder(this.bookStructure, sourcePage);
+
+                                }
                                 /// too hard
                             }
                         }
@@ -994,6 +1104,7 @@ namespace TefTeleNote_WF
                     }
                     
                     treeview_docStruct.EndUpdate();
+                    treeview_docStruct.ExpandAll();
                 }
 
             }
@@ -1078,6 +1189,38 @@ namespace TefTeleNote_WF
                         tren.Text = "● " + tren.Name;
                         break;
                     }
+                }
+                RecursiveUpdateItemState(tren);
+            }
+        }
+
+        public void RecursiveUpdateItemState(TreeNode treenod)
+        {
+            foreach (TreeNode tren in treenod.Nodes)
+            {
+                tren.Text = tren.Name.Trim();
+                tren.ForeColor = Color.Black;
+                foreach (Page pg in this.tabList)
+                {
+                    if (pg.id == tren.Tag)
+                    {
+                        tren.ForeColor = Color.DarkBlue;
+                        tren.Text = "● " + tren.Name;
+                        break;
+                    }
+                }
+                this.RecursiveUpdateItemState(tren);
+            }
+        }
+
+        public void RemoveFromTabList(string id)
+        {
+            foreach (var tab in this.tabList)
+            {
+                if (tab.id == id)
+                {
+                    this.tabList.Remove(tab);
+                    break;
                 }
             }
         }
@@ -1503,6 +1646,7 @@ namespace TefTeleNote_WF
                 await wew.ExecuteScriptAsync("function clearFormat(e){\r\n\r\nconst selection = window.getSelection();\r\nif (!selection.isCollapsed) {\r\n  if (selection.anchorNode.parentNode.tagName === 'FONT'\r\n  || selection.anchorNode.parentNode.tagName === 'SPAN'\r\n  || selection.anchorNode.parentNode.tagName === 'B'\r\n  || selection.anchorNode.parentNode.tagName === 'U'\r\n  || selection.anchorNode.parentNode.tagName === 'U'\r\n  || selection.anchorNode.parentNode.tagName === 'I'\r\n  || selection.anchorNode.parentNode.tagName === 'HREF'\r\n  || selection.anchorNode.parentNode.tagName === 'STRIKE'\r\n  || selection.anchorNode.parentNode.tagName === 'CODE'\r\n  || selection.anchorNode.parentNode.tagName === 'H3'\r\n  || selection.anchorNode.parentNode.tagName === 'H1'\r\n\r\n  ){\r\n    selection.anchorNode.parentNode.replaceWith(selection.anchorNode);\r\n\r\n    e.preventDefault();\r\n  }\r\n}\r\n}");
                 await wew.ExecuteScriptAsync("clearFormat();");
                 await wew.ExecuteScriptAsync("document.execCommand('formatBlock', false, 'div'); ");
+                await wew.ExecuteScriptAsync("document.execCommand('formatBlock', false, 'div'); ");
             }
         }
 
@@ -1626,33 +1770,35 @@ namespace TefTeleNote_WF
                 {
                     try
                     {
-                        string result = await wew.ExecuteScriptAsync("document.getElementById('bookerContent').innerHTML;");
-                        if (!string.IsNullOrEmpty(result))
-                        {
-                            //result = Regex.Unescape(result);
-                            result = result.TrimStart('"');
-                            result = result.TrimEnd('"');
-                            Page temp = new Page();
-                            temp.name = result;
+                    // Get HTML text
+                    string result = await wew.ExecuteScriptAsync("document.getElementById('bookerContent').innerHTML;");
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        //result = Regex.Unescape(result);
+                        result = result.TrimStart('"');
+                        result = result.TrimEnd('"');
+                        Page temp = new Page();
+                        temp.name = result;
 
-                            Prompt_page_textReplace_Form prf = new Prompt_page_textReplace_Form(temp);
-                            prf.Visible = true;
-                            prf.WindowState = FormWindowState.Normal;
-                            prf.TopMost = true;
+                        Prompt_page_textReplace_Form prf = new Prompt_page_textReplace_Form(temp);
+                        prf.Visible = true;
+                        prf.WindowState = FormWindowState.Normal;
+                        prf.TopMost = true;
 
                            
-                             while (prf.ToDestroy != true)
-                            {
-                                await Task.Delay(1);
-                            }
-                            //prf.Close();
-
-                            if (temp.name != result && prf.NotClosed == false)
-                            {
-                                await wew.ExecuteScriptAsync("document.getElementById('bookerContent').innerHTML = \"" + temp.name + "\";");
-                            }
-                            prf.Close();
+                        while (prf.ToDestroy != true)
+                        {
+                            await Task.Delay(1);
                         }
+                        //prf.Close();
+
+                        if (temp.name != result && prf.NotClosed == false)
+                        {
+                            // Send HTML text
+                            await wew.ExecuteScriptAsync("document.getElementById('bookerContent').innerHTML = \"" + temp.name + "\";");
+                        }
+                        prf.Close();
+                    }
 
                     } 
                     catch (System.Exception ex)
