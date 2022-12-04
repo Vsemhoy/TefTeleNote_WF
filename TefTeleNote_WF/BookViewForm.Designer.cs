@@ -39,10 +39,13 @@
             this.btn_tool_clearFormat = new System.Windows.Forms.ToolStripMenuItem();
             this.btn_tool_highlight = new System.Windows.Forms.ToolStripMenuItem();
             this.colorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.btn_tool_colorText = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem_insert = new System.Windows.Forms.ToolStripMenuItem();
             this.toolBtn_insertHref = new System.Windows.Forms.ToolStripMenuItem();
             this.toolBtn_insertRofToPage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolBtn_insertImage = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem_tools = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem_replaceText = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl_browser = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -50,12 +53,6 @@
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.panel_bookNavigation = new System.Windows.Forms.Panel();
             this.panel_bookNavigationTop = new System.Windows.Forms.Panel();
-            this.label2 = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.pictureBox3 = new System.Windows.Forms.PictureBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.pictureBox4 = new System.Windows.Forms.PictureBox();
-            this.pictureBox5 = new System.Windows.Forms.PictureBox();
             this.panel_bookNavBottomManage = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.btn_applyItem = new System.Windows.Forms.PictureBox();
@@ -69,16 +66,9 @@
             this.tool_savePage = new System.Windows.Forms.ToolStripMenuItem();
             this.tool_saveBook = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip_treeNode = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.toolStripMenuItem_tools = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem_replaceText = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip_main.SuspendLayout();
             this.tabControl_browser.SuspendLayout();
             this.panel_bookNavigation.SuspendLayout();
-            this.panel_bookNavigationTop.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox5)).BeginInit();
             this.panel_bookNavBottomManage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.btn_applyItem)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.btn_addFolder)).BeginInit();
@@ -100,6 +90,7 @@
             this.btn_tool_code,
             this.btn_tool_clearFormat,
             this.btn_tool_highlight,
+            this.btn_tool_colorText,
             this.toolStripMenuItem_insert,
             this.toolStripMenuItem_tools});
             this.menuStrip_main.Location = new System.Drawing.Point(0, 32);
@@ -165,6 +156,12 @@
             this.colorToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
             this.colorToolStripMenuItem.Text = "Color";
             // 
+            // btn_tool_colorText
+            // 
+            this.btn_tool_colorText.Name = "btn_tool_colorText";
+            this.btn_tool_colorText.Size = new System.Drawing.Size(40, 26);
+            this.btn_tool_colorText.Text = "CLR";
+            // 
             // toolStripMenuItem_insert
             // 
             this.toolStripMenuItem_insert.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -178,21 +175,36 @@
             // toolBtn_insertHref
             // 
             this.toolBtn_insertHref.Name = "toolBtn_insertHref";
-            this.toolBtn_insertHref.Size = new System.Drawing.Size(180, 22);
+            this.toolBtn_insertHref.Size = new System.Drawing.Size(171, 22);
             this.toolBtn_insertHref.Text = "External Reference";
             // 
             // toolBtn_insertRofToPage
             // 
             this.toolBtn_insertRofToPage.Name = "toolBtn_insertRofToPage";
-            this.toolBtn_insertRofToPage.Size = new System.Drawing.Size(180, 22);
+            this.toolBtn_insertRofToPage.Size = new System.Drawing.Size(171, 22);
             this.toolBtn_insertRofToPage.Text = "Page Reference";
             this.toolBtn_insertRofToPage.Click += new System.EventHandler(this.toolBtn_insertRofToPage_Click);
             // 
             // toolBtn_insertImage
             // 
             this.toolBtn_insertImage.Name = "toolBtn_insertImage";
-            this.toolBtn_insertImage.Size = new System.Drawing.Size(180, 22);
+            this.toolBtn_insertImage.Size = new System.Drawing.Size(171, 22);
             this.toolBtn_insertImage.Text = "Load insert image";
+            // 
+            // toolStripMenuItem_tools
+            // 
+            this.toolStripMenuItem_tools.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem_replaceText});
+            this.toolStripMenuItem_tools.Name = "toolStripMenuItem_tools";
+            this.toolStripMenuItem_tools.Size = new System.Drawing.Size(54, 26);
+            this.toolStripMenuItem_tools.Text = "TOOLS";
+            // 
+            // toolStripMenuItem_replaceText
+            // 
+            this.toolStripMenuItem_replaceText.Name = "toolStripMenuItem_replaceText";
+            this.toolStripMenuItem_replaceText.Size = new System.Drawing.Size(138, 22);
+            this.toolStripMenuItem_replaceText.Text = "Replace text";
+            this.toolStripMenuItem_replaceText.Click += new System.EventHandler(this.toolStripMenuItem_replaceText_Click);
             // 
             // tabControl_browser
             // 
@@ -264,80 +276,10 @@
             // 
             this.panel_bookNavigationTop.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.panel_bookNavigationTop.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel_bookNavigationTop.Controls.Add(this.label2);
-            this.panel_bookNavigationTop.Controls.Add(this.pictureBox1);
-            this.panel_bookNavigationTop.Controls.Add(this.pictureBox3);
-            this.panel_bookNavigationTop.Controls.Add(this.textBox2);
-            this.panel_bookNavigationTop.Controls.Add(this.pictureBox4);
-            this.panel_bookNavigationTop.Controls.Add(this.pictureBox5);
             this.panel_bookNavigationTop.Location = new System.Drawing.Point(0, -1);
             this.panel_bookNavigationTop.Name = "panel_bookNavigationTop";
             this.panel_bookNavigationTop.Size = new System.Drawing.Size(395, 28);
             this.panel_bookNavigationTop.TabIndex = 7;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(66, 5);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(67, 15);
-            this.label2.TabIndex = 6;
-            this.label2.Text = "Item name:";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(312, -1);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(28, 28);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 5;
-            this.pictureBox1.TabStop = false;
-            // 
-            // pictureBox3
-            // 
-            this.pictureBox3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox3.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox3.Image")));
-            this.pictureBox3.Location = new System.Drawing.Point(339, -1);
-            this.pictureBox3.Name = "pictureBox3";
-            this.pictureBox3.Size = new System.Drawing.Size(28, 28);
-            this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox3.TabIndex = 4;
-            this.pictureBox3.TabStop = false;
-            // 
-            // textBox2
-            // 
-            this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.textBox2.Location = new System.Drawing.Point(135, 5);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(171, 16);
-            this.textBox2.TabIndex = 3;
-            // 
-            // pictureBox4
-            // 
-            this.pictureBox4.BackColor = System.Drawing.SystemColors.HighlightText;
-            this.pictureBox4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox4.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pictureBox4.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox4.Image")));
-            this.pictureBox4.Location = new System.Drawing.Point(366, -1);
-            this.pictureBox4.Name = "pictureBox4";
-            this.pictureBox4.Size = new System.Drawing.Size(28, 28);
-            this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox4.TabIndex = 2;
-            this.pictureBox4.TabStop = false;
-            // 
-            // pictureBox5
-            // 
-            this.pictureBox5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox5.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox5.Image")));
-            this.pictureBox5.Location = new System.Drawing.Point(-1, -1);
-            this.pictureBox5.Name = "pictureBox5";
-            this.pictureBox5.Size = new System.Drawing.Size(28, 28);
-            this.pictureBox5.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox5.TabIndex = 0;
-            this.pictureBox5.TabStop = false;
             // 
             // panel_bookNavBottomManage
             // 
@@ -357,7 +299,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(88, 5);
+            this.label1.Location = new System.Drawing.Point(71, 5);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(67, 15);
             this.label1.TabIndex = 6;
@@ -478,21 +420,6 @@
             this.contextMenuStrip_treeNode.Name = "contextMenuStrip_treeNode";
             this.contextMenuStrip_treeNode.Size = new System.Drawing.Size(61, 4);
             // 
-            // toolStripMenuItem_tools
-            // 
-            this.toolStripMenuItem_tools.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem_replaceText});
-            this.toolStripMenuItem_tools.Name = "toolStripMenuItem_tools";
-            this.toolStripMenuItem_tools.Size = new System.Drawing.Size(54, 26);
-            this.toolStripMenuItem_tools.Text = "TOOLS";
-            // 
-            // toolStripMenuItem_replaceText
-            // 
-            this.toolStripMenuItem_replaceText.Name = "toolStripMenuItem_replaceText";
-            this.toolStripMenuItem_replaceText.Size = new System.Drawing.Size(180, 22);
-            this.toolStripMenuItem_replaceText.Text = "Replace text";
-            this.toolStripMenuItem_replaceText.Click += new System.EventHandler(this.toolStripMenuItem_replaceText_Click);
-            // 
             // BookViewForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -510,12 +437,6 @@
             this.menuStrip_main.PerformLayout();
             this.tabControl_browser.ResumeLayout(false);
             this.panel_bookNavigation.ResumeLayout(false);
-            this.panel_bookNavigationTop.ResumeLayout(false);
-            this.panel_bookNavigationTop.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox5)).EndInit();
             this.panel_bookNavBottomManage.ResumeLayout(false);
             this.panel_bookNavBottomManage.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.btn_applyItem)).EndInit();
@@ -546,12 +467,6 @@
         private PictureBox btn_removeItem;
         private Label label1;
         private Panel panel_bookNavigationTop;
-        private Label label2;
-        private PictureBox pictureBox1;
-        private PictureBox pictureBox3;
-        private TextBox textBox2;
-        private PictureBox pictureBox4;
-        private PictureBox pictureBox5;
         private MenuStrip menuStrip1;
         private ToolStripMenuItem btn_openNavigationPanel;
         private ToolStripMenuItem tool_savePage;
@@ -571,5 +486,6 @@
         private ToolStripMenuItem toolBtn_insertImage;
         private ToolStripMenuItem toolStripMenuItem_tools;
         private ToolStripMenuItem toolStripMenuItem_replaceText;
+        private ToolStripMenuItem btn_tool_colorText;
     }
 }

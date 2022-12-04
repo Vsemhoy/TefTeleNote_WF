@@ -52,7 +52,7 @@ namespace TefTeleNote_WF
         public string activeDirectory = string.Empty;
         public int activeLevel = 0;
         public string contextSelectedId = string.Empty;
-        public ItemStructure contextStruct = null;
+        public ItemStructure selectedStructInContextMenu = null;
 
         private string activeFolderPath = string.Empty;
 
@@ -144,7 +144,20 @@ namespace TefTeleNote_WF
                 tsm.Click += HighlightHtmlText;
                 this.btn_tool_highlight.DropDownItems.Add(tsm);
             }
+
+            foreach (HtmlColors htc in HtmlColors.colors)
+            {
+                ToolStripMenuItem tsm = new ToolStripMenuItem(htc.htmlName);
+                tsm.Tag = htc;
+                tsm.Text = htc.htmlName;
+                tsm.BackColor = htc.color;
+                tsm.ForeColor = htc.foreColor;
+                tsm.Click += ColorizeText;
+                this.btn_tool_colorText.DropDownItems.Add(tsm);
+            }
         }
+
+
 
 
 
@@ -721,9 +734,9 @@ namespace TefTeleNote_WF
 
                     this.contextSelectedId = (string)id;
 
-                    this.contextStruct = ItemStructure.GetItemStructById(this.bookStructure, (string)id);
-                    if (contextStruct == null) { return; }
-                    if (contextStruct.type == 1)
+                    this.selectedStructInContextMenu = ItemStructure.GetItemStructById(this.bookStructure, (string)id);
+                    if (selectedStructInContextMenu == null) { return; }
+                    if (selectedStructInContextMenu.type == 1)
                     {
                         ToolStripMenuItem tsmi = new ToolStripMenuItem();
                         tsmi.Text = "Rename Page";
@@ -737,7 +750,7 @@ namespace TefTeleNote_WF
                         tsmi.Click += Tsmi_Click_REMOVE;
                         this.contextMenuStrip_treeNode.Items.Add(tsmi);
                     }
-                    else if (contextStruct.type == 2)
+                    else if (selectedStructInContextMenu.type == 2)
                     {
                         ToolStripMenuItem tsmi = new ToolStripMenuItem();
                         tsmi.Text = "Rename Folder";
@@ -759,13 +772,13 @@ namespace TefTeleNote_WF
 
         private void Tsmi_Click_REMOVE(object? sender, EventArgs e)
         {
-            if (this.contextStruct.type == 1)
+            if (this.selectedStructInContextMenu.type == 1)
             {
-                var prompt = MessageBox.Show("Do you really want to remove page '" + this.contextStruct.name + "' ?", "Item destruction", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                var prompt = MessageBox.Show("Do you really want to remove page '" + this.selectedStructInContextMenu.name + "' ?", "Item destruction", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                 if (prompt == DialogResult.OK)
                 {
                     var idToDel = this.contextSelectedId;
-                    var path = Path.Combine(this.root, this.contextStruct.path, this.contextStruct.name) + ".html";
+                    var path = Path.Combine(this.root, this.selectedStructInContextMenu.path, this.selectedStructInContextMenu.name) + ".html";
                     File.Delete(path);
                     treeview_docStruct.BeginUpdate();
                     treeview_docStruct.Nodes.Remove(_selectedNode);
@@ -807,13 +820,13 @@ namespace TefTeleNote_WF
                 }
 
             } 
-            else if (this.contextStruct.type == 2)
+            else if (this.selectedStructInContextMenu.type == 2)
             {
-                var prompt = MessageBox.Show("Do you really want to remove folder '" + this.contextStruct.name + " ?", "Item destruction", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                var prompt = MessageBox.Show("Do you really want to remove folder '" + this.selectedStructInContextMenu.name + " ?", "Item destruction", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                 if (prompt == DialogResult.OK)
                 {
                     var idToDel = this.contextSelectedId;
-                    var path = Path.Combine(this.root, this.contextStruct.path, this.contextStruct.name);
+                    var path = Path.Combine(this.root, this.selectedStructInContextMenu.path, this.selectedStructInContextMenu.name);
                     if (Directory.Exists(path))
                     {
                         if (Directory.GetFiles(path).Length > 0)
@@ -855,7 +868,18 @@ namespace TefTeleNote_WF
 
         private void Tsmi_Click_RENAME(object? sender, EventArgs e)
         {
-            MessageBox.Show(this.contextSelectedId);
+            
+            if (this.selectedStructInContextMenu.type == 1) //page
+            {
+                this.editItemMode = true;
+                this.textBox_itemEditName.Text = this.selectedStructInContextMenu.name;
+            }
+            else if (this.selectedStructInContextMenu.type == 2) //folder
+            {
+                this.editItemMode = true;
+                this.textBox_itemEditName.Text = this.selectedStructInContextMenu.name;
+
+            }
         }
 
 
@@ -1225,6 +1249,53 @@ namespace TefTeleNote_WF
             }
         }
 
+        public void UpdatedNameInTabList(string id)
+        {
+            try
+            {
+                ItemStructure its = ItemStructure.GetItemStructById(this.bookStructure, id);
+                if (its != null)
+                {
+                    foreach (var tab in this.tabList)
+                    {
+                        if (tab.id == id)
+                        {
+                            tab.name = its.name;
+                            break;
+                        }
+                    }
+                }
+
+            } catch (System.Exception ex)
+            {
+                MessageBox.Show(ex.Message, "error");
+            }
+        }
+
+        public void CloseTabInTabs(string id)
+        {
+            try
+            {
+                ItemStructure its = ItemStructure.GetItemStructById(this.bookStructure, id);
+                if (its != null)
+                {
+                    foreach (TabPage tab in tabControl_browser.TabPages)
+                    {
+                        if ((string)tab.Tag == id)
+                        {
+                            this.tabControl_browser.TabPages.Remove(tab);
+                            break;
+                        }
+                    }
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(ex.Message, "error");
+            }
+        }
+
         private async void button1_Click(object sender, EventArgs e)
         {
             //string Text = await webVisor.ExecuteScriptAsync("document.getElementsByTagName('body')[0].innerHTML;");
@@ -1415,8 +1486,58 @@ namespace TefTeleNote_WF
         /// <param name="e"></param>
         private void btn_applyItem_Click(object sender, EventArgs e)
         {
-           
+            if (!this.editItemMode) return;
+            try
+            {
+                string newName  = this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.');
+                bool valid = BookFile.IsValidFilename(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.'));
+                if (!valid)
+                {
+                    MessageBox.Show(newName + " is not valid file name!", "Invalid name!");
+                    return;
+                }
+
+                if (this.selectedStructInContextMenu.type == 1)
+                {
+                    string filePath = Path.Combine(this.root, this.selectedStructInContextMenu.path, this.selectedStructInContextMenu.name + ".html");
+                    string targetPath = Path.Combine(this.root, this.selectedStructInContextMenu.path, newName + ".html");
+
+                    this.CloseTabInTabs(this.selectedStructInContextMenu.id);
+
+                    File.Move(filePath, targetPath);
+                    this.selectedStructInContextMenu.name = newName;
+
+                    this.SaveBookStruture();
+                    this.SaveBookManifest();
+
+                    this.FillBookTree();
+                    this.UpdateTabList();
+                }
+                else if (this.selectedStructInContextMenu.type == 2)
+                {
+                    string dirPath = Path.Combine(this.root, this.selectedStructInContextMenu.path, this.selectedStructInContextMenu.name);
+                    string targetPath = Path.Combine(this.root, this.selectedStructInContextMenu.path, newName);
+
+                    Directory.Move(dirPath, targetPath);
+                    this.selectedStructInContextMenu.name = newName;
+
+                    this.SaveBookStruture();
+                    this.SaveBookManifest();
+
+                    this.FillBookTree();
+                    this.UpdateTabList();
+                }
+
+                //MessageBox.Show(this.contextSelectedId);
+
+            } catch (System.Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            this.textBox_itemEditName.Text = String.Empty;
+            this.editItemMode = false;
         }
+
 
         /// <summary>
         /// Creates new folder in the tree
@@ -1425,6 +1546,7 @@ namespace TefTeleNote_WF
         /// <param name="e"></param>
         private void btn_addFolder_Click(object sender, EventArgs e)
         {
+            this.editItemMode = false;
             if (this.activeLevel == 0) { this.activeLevel = 1; };
             if (!string.IsNullOrEmpty(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
             {
@@ -1481,6 +1603,7 @@ namespace TefTeleNote_WF
         /// <param name="e"></param>
         private void btn_addPage_Click(object sender, EventArgs e)
         {
+            this.editItemMode = false;
             if (this.activeLevel == 0) { this.activeLevel = 1; };
             if (!string.IsNullOrEmpty(this.textBox_itemEditName.Text.Trim().TrimStart('.').TrimEnd('.')))
             {
@@ -1660,19 +1783,30 @@ namespace TefTeleNote_WF
             {
                 HtmlColors htc = tdb.Tag as HtmlColors;
                 color = htc.htmlColor.ToLower();
-                if (htc.foreColor != Color.Black)
-                {
-                    fcol = htc.textColor.ToLower();
-                }
+                fcol = htc.textColor.ToLower();
             }
             WebView2 wew = this.GetActiveWebView();
             if (wew != null)
             {
                 await wew.ExecuteScriptAsync("document.execCommand('hiliteColor', false, '" + color + "');");
-                if (fcol != null)
-                {
-                    await wew.ExecuteScriptAsync("document.execCommand('forecolor', false, '" + fcol + "');");
-                }
+                await wew.ExecuteScriptAsync("document.execCommand('forecolor', false, '" + fcol + "');");
+            }
+        }
+
+
+        private async void ColorizeText(object? sender, EventArgs e)
+        {
+            ToolStripMenuItem tdb = (ToolStripMenuItem)sender;
+            string fcol = null;
+            if (tdb != null)
+            {
+                HtmlColors htc = tdb.Tag as HtmlColors;
+                fcol = htc.htmlColor.ToLower();
+            }
+            WebView2 wew = this.GetActiveWebView();
+            if (wew != null)
+            {
+                await wew.ExecuteScriptAsync("document.execCommand('forecolor', false, '" + fcol + "');");
             }
         }
 
